@@ -1,0 +1,239 @@
+﻿using AutoMapper;
+using demoAPI.Data.DS;
+using demoAPI.Data.School;
+using demoAPI.Model.DS;
+using demoAPI.Model.School;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Runtime.InteropServices;
+
+namespace demoAPI.Controllers
+{
+    [ApiController]
+    [Route("[controller]")]
+    public class DSController : ControllerBase
+    {
+        private readonly DSContext _context;
+        private readonly IMapper _mapper;
+
+        private readonly List<int> _transferTypes = new() { 3, 4 };
+
+        public DSController(DSContext context, IMapper mapper)
+        {
+            _context = context;
+            _mapper = mapper;
+        }
+
+        [HttpGet(Name = "GetDSItems")]
+        public async Task<IEnumerable<DSItem>> GetAsync()
+        {
+            return await _context.DSItems.ToListAsync();
+        }
+
+        [HttpGet("GetTransactionGroupStat")]
+        public async Task<IActionResult> GetDebitStat(int dstypeid)
+        {
+            var responses = (
+                 from a in _context.DSTransactions
+                 join b in _context.DSItems on a.DSItemID equals b.ID into bb
+                 from b2 in bb.DefaultIfEmpty()
+                 join c in _context.DSItemSubs on a.DSItemSubID equals c.ID into cc
+                 from c2 in cc.DefaultIfEmpty()
+                 join d in _context.DSItems on c2.DSItemID equals d.ID into dd
+                 from d2 in dd.DefaultIfEmpty()
+                 where a.DSTypeID == dstypeid
+                 select new DSDebitStat
+                 {
+                     DSItemName = b2.ID > 0 ? b2.Name : $"{d2.Name}|{c2.Name}",
+                     Amount = a.Amount,
+                 }).ToListAsync();
+
+            var res = await responses;
+            res = res.GroupBy(x => x.DSItemName).Select(y => new DSDebitStat { DSItemName = y.First().DSItemName, Amount = y.Sum(x => x.Amount) }).ToList();
+            return Ok(res);
+        }
+
+        [HttpGet("GetDSTransaction")]
+        public async Task<IEnumerable<DSTransactionDto>> GetDSTransactionAsync()
+        {
+            var finalRes = new List<DSTransactionDto>();
+
+            var responses = (
+                 from a in _context.DSTransactions
+                 join b in _context.DSAccounts on a.DSAccountID equals b.ID
+                 join c in _context.DSTypes on a.DSTypeID equals c.ID
+                 join d in _context.DSItems on a.DSItemID equals d.ID into dd
+                 from d2 in dd.DefaultIfEmpty()
+                 join e in _context.DSItemSubs on a.DSItemSubID equals e.ID into ee
+                 from e2 in ee.DefaultIfEmpty()
+                 join f in _context.DSItems on e2.DSItemID equals f.ID into ff
+                 from f2 in ff.DefaultIfEmpty()
+                 join g in _context.DSTransactions on a.DSTransferOutID equals g.ID into gg
+                 from g2 in gg.DefaultIfEmpty()
+                 join h in _context.DSAccounts on g2.DSAccountID equals h.ID into hh
+                 from h2 in hh.DefaultIfEmpty()
+                 select new DSTransactionDto
+                 {
+                     DSTypeName = c.Name,
+                     DSAccountName = b.Name,
+                     DSItemName = c.ID == 4 ? h2.Name : d2.ID > 0 ? d2.Name : $"{f2.Name}|{e2.Name}",
+                     ID = a.ID,
+                     DSTypeID = a.DSTypeID,
+                     DSAccountID = a.DSAccountID,
+                     DSTransferOutID = a.DSTransferOutID,
+                     DSItemID = a.DSItemID,
+                     DSItemSubID = a.DSItemSubID,
+                     Description = a.Description,
+                     Amount = a.Amount,
+                 }).ToListAsync();
+
+            var res2 = await responses;
+
+            foreach (var item in res2)
+            {
+                if (item.DSTypeID == 3)
+                {
+                    item.DSItemName = res2.FirstOrDefault(x => x.DSTransferOutID == item.ID).DSAccountName;
+                }
+            }
+
+            return res2;
+        }
+
+        [HttpPost(Name = "GetDSItems")]
+        public async Task<IActionResult> PostAsync(DSTransactionReq req)
+        {
+            if (req.DSTypeID == 3)
+            {
+                if (req.DSAccountToID == 0)
+                {
+                    return BadRequest("Must insert a transfer to account");
+                }
+                else if (req.DSAccountToID == req.DSAccountID)
+                {
+                    return BadRequest("Transfer out account cannot be same");
+                }
+            }
+
+            var entity = _mapper.Map<DSTransaction>(req);
+
+            _context.DSTransactions.Add(entity);
+            _context.SaveChanges();
+
+            if (req.DSTypeID == 3)
+            {
+                DSTransaction entityToAccount = new DSTransaction
+                {
+                    DSTypeID = 4,
+                    Amount = entity.Amount,
+                    Description = entity.Description,
+                    DSAccountID = req.DSAccountToID,
+                    DSTransferOutID = entity.ID
+                };
+                _context.DSTransactions.Add(entityToAccount);
+                _context.SaveChanges();
+            }
+
+            return Ok(await GetDSTransactionAsync());
+        }
+
+        [HttpPut(Name = "GetDSItems")]
+        public async Task<IActionResult> PutAsync(int id, DSTransactionReq req)
+        {
+            var origin = _context.DSTransactions.FirstOrDefault(x => x.ID == id);
+            if (origin == null)
+            {
+                var message = string.Format("Record not found");
+                return NotFound(message);
+            }
+
+            if (req.DSTypeID == 3)
+            {
+                if (req.DSAccountToID == 0)
+                {
+                    return BadRequest("Must insert a transfer to account");
+                }
+                else if (req.DSAccountToID == req.DSAccountID)
+                {
+                    return BadRequest("Transfer out account cannot be same");
+                }
+            }
+
+            if (_transferTypes.Contains(origin.DSTypeID))
+            {
+                var originFromToAccount = _context.DSTransactions.
+                    FirstOrDefault(x => origin.DSTypeID == 3 ? x.DSTransferOutID == id : x.ID == origin.DSTransferOutID);
+
+                if (!_transferTypes.Contains(req.DSTypeID)) //not transfer type
+                {
+                    _context.DSTransactions.Remove(originFromToAccount);
+                    _mapper.Map(req, origin);
+                }
+                else
+                {
+                    origin.DSAccountID = origin.DSTypeID == 3 ? req.DSAccountID : req.DSAccountToID;
+                    origin.Amount = req.Amount;
+                    origin.Description = req.Description;
+
+                    originFromToAccount.DSAccountID = origin.DSTypeID == 3 ? req.DSAccountToID : req.DSAccountID;
+                    originFromToAccount.Amount = req.Amount;
+                    originFromToAccount.Description = req.Description;
+                }
+            }
+            else
+            {
+                _mapper.Map(req, origin);
+
+                if (_transferTypes.Contains(origin.DSTypeID)) //not transfer type
+                {
+                    var toAccount = new DSTransaction
+                    {
+                        DSTransferOutID = origin.ID,
+                        DSTypeID = 4,
+                        DSAccountID = req.DSAccountToID,
+                        Description = origin.Description,
+                        Amount = origin.Amount
+                    };
+                    _context.DSTransactions.Add(toAccount);
+                }
+            }
+
+            _context.SaveChanges();
+
+            return Ok(await GetDSTransactionAsync());
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteAsync(int id)
+        {
+            var origin = _context.DSTransactions.FirstOrDefault(x => x.ID == id);
+            if (origin == null)
+            {
+                var message = string.Format("Record not found");
+                return NotFound(message);
+            }
+
+            _context.DSTransactions.Remove(origin);
+
+            if (_transferTypes.Contains(origin.DSTypeID))
+            {
+                var originFromToAcction = _context.DSTransactions.
+                    FirstOrDefault(x => origin.DSTypeID == 3 ? x.DSTransferOutID == id : x.ID == origin.DSTransferOutID);
+                if (originFromToAcction == null)
+                {
+                    var message = string.Format("Record not found");
+                    return NotFound(message);
+                }
+                _context.DSTransactions.Remove(originFromToAcction);
+            }
+
+            _context.SaveChanges();
+
+            return Ok(await GetDSTransactionAsync());
+        }
+    }
+}
