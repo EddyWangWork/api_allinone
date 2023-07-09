@@ -1,3 +1,4 @@
+using demoAPI.BLL.DS;
 using demoAPI.BLL.Member;
 using demoAPI.Common.Helper;
 using demoAPI.Data.DS;
@@ -83,6 +84,7 @@ builder.Services.AddSingleton<IJwtAuthenticationHelper>(new JwtAuthenticationHel
 
 //dependency
 builder.Services.AddScoped<IMemberBLL, MemberBLL>();
+builder.Services.AddScoped<IDSBLL, DSBLL>();
 //END================
 
 builder.Services.AddDbContext<DSContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DSConnection")));
@@ -113,7 +115,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseMyMiddleware();
+app.UseMiddleware<ExMiddleware>();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using demoAPI.BLL.DS;
 using demoAPI.Data.DS;
 using demoAPI.Model.DS;
 using Microsoft.AspNetCore.Mvc;
@@ -12,19 +13,15 @@ namespace demoAPI.Controllers
     {
         private readonly DSContext _context;
         private readonly IMapper _mapper;
+        private readonly IDSBLL _dsBLL;
 
         private readonly List<int> _transferTypes = new() { 3, 4 };
 
-        public DSController(DSContext context, IMapper mapper)
+        public DSController(DSContext context, IMapper mapper, IDSBLL dsBLL)
         {
             _context = context;
             _mapper = mapper;
-        }
-
-        [HttpGet(Name = "GetDSItems")]
-        public async Task<IEnumerable<DSItem>> GetAsync()
-        {
-            return await _context.DSItems.ToListAsync();
+            _dsBLL = dsBLL;
         }
 
         [HttpGet("GetTransactionGroupStat")]
@@ -51,53 +48,12 @@ namespace demoAPI.Controllers
         }
 
         [HttpGet("GetDSTransaction")]
-        public async Task<IEnumerable<DSTransactionDto>> GetDSTransactionAsync()
+        public async Task<IActionResult> GetDSTransactionAsync()
         {
-            var finalRes = new List<DSTransactionDto>();
-
-            var responses = (
-                 from a in _context.DSTransactions
-                 join b in _context.DSAccounts on a.DSAccountID equals b.ID
-                 join c in _context.DSTypes on a.DSTypeID equals c.ID
-                 join d in _context.DSItems on a.DSItemID equals d.ID into dd
-                 from d2 in dd.DefaultIfEmpty()
-                 join e in _context.DSItemSubs on a.DSItemSubID equals e.ID into ee
-                 from e2 in ee.DefaultIfEmpty()
-                 join f in _context.DSItems on e2.DSItemID equals f.ID into ff
-                 from f2 in ff.DefaultIfEmpty()
-                 join g in _context.DSTransactions on a.DSTransferOutID equals g.ID into gg
-                 from g2 in gg.DefaultIfEmpty()
-                 join h in _context.DSAccounts on g2.DSAccountID equals h.ID into hh
-                 from h2 in hh.DefaultIfEmpty()
-                 select new DSTransactionDto
-                 {
-                     DSTypeName = c.Name,
-                     DSAccountName = b.Name,
-                     DSItemName = c.ID == 4 ? h2.Name : d2.ID > 0 ? d2.Name : $"{f2.Name}|{e2.Name}",
-                     ID = a.ID,
-                     DSTypeID = a.DSTypeID,
-                     DSAccountID = a.DSAccountID,
-                     DSTransferOutID = a.DSTransferOutID,
-                     DSItemID = a.DSItemID,
-                     DSItemSubID = a.DSItemSubID,
-                     Description = a.Description,
-                     Amount = a.Amount,
-                 }).ToListAsync();
-
-            var res2 = await responses;
-
-            foreach (var item in res2)
-            {
-                if (item.DSTypeID == 3)
-                {
-                    item.DSItemName = res2.FirstOrDefault(x => x.DSTransferOutID == item.ID).DSAccountName;
-                }
-            }
-
-            return res2;
+            return Ok(await _dsBLL.GetDSTransactionAsync());
         }
 
-        [HttpPost(Name = "GetDSItems")]
+        [HttpPost]
         public async Task<IActionResult> PostAsync(DSTransactionReq req)
         {
             if (req.DSTypeID == 3)
@@ -112,26 +68,7 @@ namespace demoAPI.Controllers
                 }
             }
 
-            var entity = _mapper.Map<DSTransaction>(req);
-
-            _context.DSTransactions.Add(entity);
-            _context.SaveChanges();
-
-            if (req.DSTypeID == 3)
-            {
-                DSTransaction entityToAccount = new DSTransaction
-                {
-                    DSTypeID = 4,
-                    Amount = entity.Amount,
-                    Description = entity.Description,
-                    DSAccountID = req.DSAccountToID,
-                    DSTransferOutID = entity.ID
-                };
-                _context.DSTransactions.Add(entityToAccount);
-                _context.SaveChanges();
-            }
-
-            return Ok(await GetDSTransactionAsync());
+            return Ok(await _dsBLL.Add(req));
         }
 
         [HttpPut(Name = "GetDSItems")]

@@ -22,7 +22,7 @@ namespace demoAPI.Middleware
 
         public async Task Invoke(HttpContext context, IMemberBLL memberBLL)
         {
-            List<string> whitePages = new List<string> { "/api/members/login", "/api/members/signup" };
+            List<string> whitePages = new List<string> { "/Member/login", "/Member/signup" };
 
             if (whitePages.Contains(context.Request.Path.Value))
             {
@@ -51,8 +51,21 @@ namespace demoAPI.Middleware
                     return;
                 }
 
-                BLLBase.MemberId = member.ID;
+                BaseBLL.MemberId = member.ID;
                 memberBLL.UpdateMemberSession();
+            }
+            else
+            {
+                context.Response.StatusCode = 401;
+                context.Response.ContentType = "application/json";
+
+                await context.Response.WriteAsync(new ErrorDetails()
+                {
+                    StatusCode = context.Response.StatusCode,
+                    Message = "Please Login"
+                }.ToString());
+
+                return;
             }
 
             await _next.Invoke(context);

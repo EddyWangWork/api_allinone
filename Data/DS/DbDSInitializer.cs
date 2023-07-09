@@ -31,10 +31,10 @@ namespace demoAPI.Data.DS
 
             var dsTransactions = new DSTransaction[]
             {
-                new DSTransaction{ DSTypeID = 2, DSAccountID = 1, DSTransferOutID = 0, DSItemID = 0, DSItemSubID = 1, Description = "kfc", Amount = 15},
-                new DSTransaction{ DSTypeID = 2, DSAccountID = 1, DSTransferOutID = 0, DSItemID = 2, DSItemSubID = 0, Description = "car", Amount = 50},
-                new DSTransaction{ DSTypeID = 3, DSAccountID = 1, DSTransferOutID = 0, DSItemID = 0, DSItemSubID = 0, Description = "", Amount = 1000},
-                new DSTransaction{ DSTypeID = 4, DSAccountID = 2, DSTransferOutID = 3, DSItemID = 0, DSItemSubID = 0, Description = "", Amount = 1000},
+                new DSTransaction{ MemberID=1, DSTypeID = 2, DSAccountID = 1, DSTransferOutID = 0, DSItemID = 0, DSItemSubID = 1, Description = "kfc", Amount = 15},
+                new DSTransaction{ MemberID=1, DSTypeID = 2, DSAccountID = 1, DSTransferOutID = 0, DSItemID = 2, DSItemSubID = 0, Description = "car", Amount = 50},
+                new DSTransaction{ MemberID=1, DSTypeID = 3, DSAccountID = 1, DSTransferOutID = 0, DSItemID = 0, DSItemSubID = 0, Description = "", Amount = 1000},
+                new DSTransaction{ MemberID=1, DSTypeID = 4, DSAccountID = 2, DSTransferOutID = 3, DSItemID = 0, DSItemSubID = 0, Description = "", Amount = 1000},
             };
             foreach (var s in dsTransactions)
             {
@@ -59,10 +59,10 @@ namespace demoAPI.Data.DS
 
             //-----------------------------------
 
-            var dsAccounts = new TransProfile[]
+            var dsAccounts = new DSAccount[]
             {
-                new TransProfile{ Name="Maybank", IsActive=true },
-                new TransProfile{ Name="Public", IsActive=true },
+                new DSAccount{ MemberID=1, Name="Maybank", IsActive=true },
+                new DSAccount{ MemberID=1, Name="Public", IsActive=true },
             };
             foreach (var s in dsAccounts)
             {
@@ -74,8 +74,8 @@ namespace demoAPI.Data.DS
 
             var dsItems = new DSItem[]
             {
-                new DSItem{ Name="foods", IsActive=true },
-                new DSItem{ Name="petrol", IsActive=true },
+                new DSItem{ MemberID=1,Name="foods", IsActive=true },
+                new DSItem{ MemberID=1,Name="petrol", IsActive=true },
             };
             foreach (var s in dsItems)
             {
@@ -87,9 +87,9 @@ namespace demoAPI.Data.DS
 
             var dsItemSubs = new DSItemSub[]
             {
-                new DSItemSub{  Name="dinner", IsActive=true, DSItemID = 1},
-                new DSItemSub{  Name="lunch", IsActive=true, DSItemID = 1},
-                new DSItemSub{  Name="car", IsActive=true, DSItemID = 2},
+                new DSItemSub{ Name="dinner", IsActive=true, DSItemID = 1},
+                new DSItemSub{ Name="lunch", IsActive=true, DSItemID = 1},
+                new DSItemSub{ Name="car", IsActive=true, DSItemID = 2},
             };
             foreach (var e in dsItemSubs)
             {

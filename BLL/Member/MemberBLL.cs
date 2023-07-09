@@ -5,7 +5,7 @@ using demoAPI.Model;
 
 namespace demoAPI.BLL.Member
 {
-    public class MemberBLL : BLLBase, IMemberBLL
+    public class MemberBLL : BaseBLL, IMemberBLL
     {
         private readonly DSContext _context;
         private readonly IMapper _mapper;

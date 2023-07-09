@@ -13,5 +13,8 @@ namespace demoAPI.Model.DS
         public string? Description { get; set; }
         public decimal Amount { get; set; }
         public DateTime CreatedDateTime { get; set; } = DateTime.Now;
+
+        public int MemberID { get; set; }
+        public Member Member { get; set; }
     }
 }
