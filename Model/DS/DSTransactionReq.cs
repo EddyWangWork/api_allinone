@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-using demoAPI.Model.School;
 
 namespace demoAPI.Model.DS
 {

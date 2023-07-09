@@ -1,5 +1,5 @@
 ﻿using demoAPI.Model.DS;
-using demoAPI.Model.School;
+using demoAPI.Model;
 using Microsoft.EntityFrameworkCore;
 
 namespace demoAPI.Data.DS
@@ -15,6 +15,7 @@ namespace demoAPI.Data.DS
         public DbSet<TransProfile> DSAccounts { get; set; }
         public DbSet<DSType> DSTypes { get; set; }
         public DbSet<DSTransaction> DSTransactions { get; set; }
+        public DbSet<Member> Members { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -23,6 +24,7 @@ namespace demoAPI.Data.DS
             modelBuilder.Entity<TransProfile>().ToTable("DSAccount");
             modelBuilder.Entity<DSType>().ToTable("DSType");
             modelBuilder.Entity<DSTransaction>().ToTable("DSTransaction");
+            modelBuilder.Entity<Member>().ToTable("Member");
         }
     }
 }

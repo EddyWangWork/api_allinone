@@ -1,6 +1,5 @@
-﻿using demoAPI.Data.School;
-using demoAPI.Model.DS;
-using demoAPI.Model.School;
+﻿using demoAPI.Model.DS;
+using demoAPI.Model;
 
 namespace demoAPI.Data.DS
 {
@@ -14,6 +13,19 @@ namespace demoAPI.Data.DS
             {
                 return;   // DB has been seeded
             }
+
+            //-----------------------------------
+
+            var members = new Member[]
+            {
+                new Member{ Name="admin", Password="admin" },
+                new Member{ Name="eddy", Password="eddy" }
+            };
+            foreach (var s in members)
+            {
+                context.Members.Add(s);
+            }
+            context.SaveChanges();
 
             //-----------------------------------
 

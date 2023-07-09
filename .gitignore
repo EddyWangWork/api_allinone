@@ -396,5 +396,3 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
-/obj/Debug/net6.0/demoAPI.csproj.AssemblyReference.cache
-/.vs/demoAPI/v17/.suo

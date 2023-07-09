@@ -1,15 +1,8 @@
 ﻿using AutoMapper;
 using demoAPI.Data.DS;
-using demoAPI.Data.School;
 using demoAPI.Model.DS;
-using demoAPI.Model.School;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Client;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Runtime.InteropServices;
 
 namespace demoAPI.Controllers
 {
