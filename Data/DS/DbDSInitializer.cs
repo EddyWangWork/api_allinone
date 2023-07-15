@@ -1,5 +1,6 @@
 ﻿using demoAPI.Model.DS;
 using demoAPI.Model;
+using demoAPI.Model.TodlistsDone;
 
 namespace demoAPI.Data.DS
 {
@@ -14,8 +15,6 @@ namespace demoAPI.Data.DS
                 return;   // DB has been seeded
             }
 
-            //-----------------------------------
-
             var members = new Member[]
             {
                 new Member{ Name="admin", Password="admin" },
@@ -24,6 +23,68 @@ namespace demoAPI.Data.DS
             foreach (var s in members)
             {
                 context.Members.Add(s);
+            }
+            context.SaveChanges();
+
+            //-----------------------------------
+
+            var todolists = new Todolist[]
+            {
+                new Todolist()
+                {
+                    Name = "Car",
+                    CategoryID = 1,
+                    UpdateDate = DateTime.Now,
+                    MemberID = 1
+                },
+                new Todolist()
+                {
+                    Name = "IResidentMaintainFee",
+                    CategoryID = 1,
+                    UpdateDate = DateTime.Now,
+                    MemberID = 1
+                },
+                new Todolist()
+                {
+                    Name = "Electric",
+                    CategoryID = 1,
+                    UpdateDate = DateTime.Now,
+                    MemberID = 1
+                },
+                new Todolist()
+                {
+                    Name = "Make payment",
+                    CategoryID = 2,
+                    UpdateDate = DateTime.Now,
+                    MemberID = 1
+                }
+            };
+
+            foreach (var s in todolists)
+            {
+                context.Todolists.Add(s);
+            }
+            context.SaveChanges();
+
+            //-----------------------------------
+
+            var todolistsDone = new TodolistDone[]
+            {
+                new TodolistDone()
+                {
+                    TodolistID = 1,
+                    UpdateDate= DateTime.Now.AddMonths(-1),
+                },
+                new TodolistDone()
+                {
+                    TodolistID = 2,
+                    UpdateDate= DateTime.Now,
+                },
+            };
+
+            foreach (var s in todolistsDone)
+            {
+                context.TodolistsDone.Add(s);
             }
             context.SaveChanges();
 

@@ -6,5 +6,7 @@ namespace demoAPI.BLL.DS
     {
         Task<IEnumerable<DSTransactionDto>> GetDSTransactionAsync();
         Task<DSTransactionDto> Add(DSTransactionReq req);
+        Task<bool> Edit(int id, DSTransactionReq req);
+        Task<bool> Delete(int id);
     }
 }

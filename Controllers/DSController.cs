@@ -16,6 +16,7 @@ namespace demoAPI.Controllers
         private readonly IDSBLL _dsBLL;
 
         private readonly List<int> _transferTypes = new() { 3, 4 };
+        private readonly List<int> _validTransTypes = new() { 1, 2, 3 };
 
         public DSController(DSContext context, IMapper mapper, IDSBLL dsBLL)
         {
@@ -56,6 +57,11 @@ namespace demoAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> PostAsync(DSTransactionReq req)
         {
+            if (!_validTransTypes.Contains(req.DSTypeID))
+            {
+                return BadRequest($"Invalid transaction type: {req.DSTypeID}");
+            }
+
             if (req.DSTypeID == 3)
             {
                 if (req.DSAccountToID == 0)
@@ -71,14 +77,12 @@ namespace demoAPI.Controllers
             return Ok(await _dsBLL.Add(req));
         }
 
-        [HttpPut(Name = "GetDSItems")]
+        [HttpPut("{id}")]
         public async Task<IActionResult> PutAsync(int id, DSTransactionReq req)
         {
-            var origin = _context.DSTransactions.FirstOrDefault(x => x.ID == id);
-            if (origin == null)
+            if (!_validTransTypes.Contains(req.DSTypeID))
             {
-                var message = string.Format("Record not found");
-                return NotFound(message);
+                return BadRequest($"Invalid transaction type: {req.DSTypeID}");
             }
 
             if (req.DSTypeID == 3)
@@ -93,77 +97,15 @@ namespace demoAPI.Controllers
                 }
             }
 
-            if (_transferTypes.Contains(origin.DSTypeID))
-            {
-                var originFromToAccount = _context.DSTransactions.
-                    FirstOrDefault(x => origin.DSTypeID == 3 ? x.DSTransferOutID == id : x.ID == origin.DSTransferOutID);
-
-                if (!_transferTypes.Contains(req.DSTypeID)) //not transfer type
-                {
-                    _context.DSTransactions.Remove(originFromToAccount);
-                    _mapper.Map(req, origin);
-                }
-                else
-                {
-                    origin.DSAccountID = origin.DSTypeID == 3 ? req.DSAccountID : req.DSAccountToID;
-                    origin.Amount = req.Amount;
-                    origin.Description = req.Description;
-
-                    originFromToAccount.DSAccountID = origin.DSTypeID == 3 ? req.DSAccountToID : req.DSAccountID;
-                    originFromToAccount.Amount = req.Amount;
-                    originFromToAccount.Description = req.Description;
-                }
-            }
-            else
-            {
-                _mapper.Map(req, origin);
-
-                if (_transferTypes.Contains(origin.DSTypeID)) //not transfer type
-                {
-                    var toAccount = new DSTransaction
-                    {
-                        DSTransferOutID = origin.ID,
-                        DSTypeID = 4,
-                        DSAccountID = req.DSAccountToID,
-                        Description = origin.Description,
-                        Amount = origin.Amount
-                    };
-                    _context.DSTransactions.Add(toAccount);
-                }
-            }
-
-            _context.SaveChanges();
-
-            return Ok(await GetDSTransactionAsync());
+            var result = await _dsBLL.Edit(id, req);
+            return Ok();
         }
 
-        [HttpDelete]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAsync(int id)
         {
-            var origin = _context.DSTransactions.FirstOrDefault(x => x.ID == id);
-            if (origin == null)
-            {
-                var message = string.Format("Record not found");
-                return NotFound(message);
-            }
-
-            _context.DSTransactions.Remove(origin);
-
-            if (_transferTypes.Contains(origin.DSTypeID))
-            {
-                var originFromToAcction = _context.DSTransactions.
-                    FirstOrDefault(x => origin.DSTypeID == 3 ? x.DSTransferOutID == id : x.ID == origin.DSTransferOutID);
-                if (originFromToAcction == null)
-                {
-                    var message = string.Format("Record not found");
-                    return NotFound(message);
-                }
-                _context.DSTransactions.Remove(originFromToAcction);
-            }
-
-            _context.SaveChanges();
-
-            return Ok(await GetDSTransactionAsync());
+            var result = await _dsBLL.Delete(id);
+            return Ok(result);
         }
     }
 }

@@ -1,5 +1,6 @@
 using demoAPI.BLL.DS;
 using demoAPI.BLL.Member;
+using demoAPI.BLL.Todolist;
 using demoAPI.Common.Helper;
 using demoAPI.Data.DS;
 using demoAPI.Middleware;
@@ -84,6 +85,8 @@ builder.Services.AddSingleton<IJwtAuthenticationHelper>(new JwtAuthenticationHel
 
 //dependency
 builder.Services.AddScoped<IMemberBLL, MemberBLL>();
+builder.Services.AddScoped<ITodolistBLL, TodolistBLL>();
+builder.Services.AddScoped<ITodolistDoneBLL, TodolistDoneBLL>();
 builder.Services.AddScoped<IDSBLL, DSBLL>();
 //END================
 

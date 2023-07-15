@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using demoAPI.Data.DS;
 using demoAPI.Model.DS;
+using demoAPI.Model.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -71,6 +72,7 @@ namespace demoAPI.BLL.DS
             var entity = _mapper.Map<DSTransaction>(req);
 
             _context.DSTransactions.Add(entity);
+            entity.MemberID = MemberId;
             _context.SaveChanges();
 
             if (req.DSTypeID == 3)
@@ -81,13 +83,104 @@ namespace demoAPI.BLL.DS
                     Amount = entity.Amount,
                     Description = entity.Description,
                     DSAccountID = req.DSAccountToID,
-                    DSTransferOutID = entity.ID
+                    DSTransferOutID = entity.ID,
+                    MemberID = MemberId
                 };
                 _context.DSTransactions.Add(entityToAccount);
                 _context.SaveChanges();
             }
 
             return new DSTransactionDto();
+        }
+
+        public async Task<bool> Edit(int id, DSTransactionReq req)
+        {
+            var origin = _context.DSTransactions.FirstOrDefault(x => x.ID == id);
+            if (origin == null)
+            {
+                throw new NotFoundException("Transaction Record not found");
+            }
+
+            if (req.DSTypeID == 3)
+            {
+                if (req.DSAccountToID == 0)
+                {
+                    throw new BadRequestException("Must insert a transfer to account");
+                }
+                else if (req.DSAccountToID == req.DSAccountID)
+                {
+                    throw new BadRequestException("Transfer out account cannot be same");
+                }
+            }
+
+            if (_transferTypes.Contains(origin.DSTypeID))
+            {
+                var originFromToAccount = _context.DSTransactions.
+                    FirstOrDefault(x => origin.DSTypeID == 3 ? x.DSTransferOutID == id : x.ID == origin.DSTransferOutID);
+
+                if (!_transferTypes.Contains(req.DSTypeID)) //not transfer type
+                {
+                    _context.DSTransactions.Remove(originFromToAccount);
+                    _mapper.Map(req, origin);
+                }
+                else
+                {
+                    origin.DSAccountID = origin.DSTypeID == 3 ? req.DSAccountID : req.DSAccountToID;
+                    origin.Amount = req.Amount;
+                    origin.Description = req.Description;
+
+                    originFromToAccount.DSAccountID = origin.DSTypeID == 3 ? req.DSAccountToID : req.DSAccountID;
+                    originFromToAccount.Amount = req.Amount;
+                    originFromToAccount.Description = req.Description;
+                }
+            }
+            else
+            {
+                _mapper.Map(req, origin);
+
+                if (_transferTypes.Contains(origin.DSTypeID)) //not transfer type
+                {
+                    var toAccount = new DSTransaction
+                    {
+                        DSTransferOutID = origin.ID,
+                        DSTypeID = 4,
+                        DSAccountID = req.DSAccountToID,
+                        Description = origin.Description,
+                        Amount = origin.Amount,
+                        MemberID = MemberId
+                    };
+                    _context.DSTransactions.Add(toAccount);
+                }
+            }
+
+            _context.SaveChanges();
+            return true;
+        }
+
+        public async Task<bool> Delete(int id)
+        {
+            var origin = _context.DSTransactions.FirstOrDefault(x => x.ID == id);
+            if (origin == null)
+            {
+                throw new NotFoundException("Transaction Record not found");
+            }
+
+            _context.DSTransactions.Remove(origin);
+
+            if (_transferTypes.Contains(origin.DSTypeID))
+            {
+                var originFromToAcction = _context.DSTransactions.
+                    FirstOrDefault(x => origin.DSTypeID == 3 ? x.DSTransferOutID == id : x.ID == origin.DSTransferOutID);
+                if (originFromToAcction == null)
+                {
+                    throw new NotFoundException("Transaction Record not found");
+                }
+                _context.DSTransactions.Remove(originFromToAcction);
+            }
+
+            _context.SaveChanges();
+
+            return true;
         }
     }
 }
