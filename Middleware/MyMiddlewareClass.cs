@@ -22,7 +22,13 @@ namespace demoAPI.Middleware
 
         public async Task Invoke(HttpContext context, IMemberBLL memberBLL)
         {
-            List<string> whitePages = new List<string> { "/Member/login", "/Member/signup" };
+            List<string> whitePages = new List<string>
+            {
+                "/Member/login",
+                "/Member/signup",
+                "/Common/getDSTransTypes",
+                "/Common/getTodolistTypes",
+            };
 
             if (whitePages.Contains(context.Request.Path.Value))
             {

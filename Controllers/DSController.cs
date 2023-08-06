@@ -25,7 +25,7 @@ namespace demoAPI.Controllers
             _dsBLL = dsBLL;
         }
 
-        [HttpGet("GetTransactionGroupStat")]
+        [HttpGet("getTransactionGroupStat")]
         public async Task<IActionResult> GetDebitStat(int dstypeid)
         {
             var responses = (
@@ -48,10 +48,16 @@ namespace demoAPI.Controllers
             return Ok(res);
         }
 
-        [HttpGet("GetDSTransaction")]
+        [HttpGet("getDSTransaction")]
         public async Task<IActionResult> GetDSTransactionAsync()
         {
             return Ok(await _dsBLL.GetDSTransactionAsync());
+        }
+
+        [HttpGet("getDSTransactionV2")]
+        public async Task<IActionResult> GetDSTransactionAsyncV2()
+        {
+            return Ok(await _dsBLL.GetDSTransactionAsyncV2());
         }
 
         [HttpPost]

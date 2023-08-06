@@ -1,4 +1,7 @@
+using demoAPI.BLL;
+using demoAPI.BLL.Common;
 using demoAPI.BLL.DS;
+using demoAPI.BLL.DSItems;
 using demoAPI.BLL.Member;
 using demoAPI.BLL.Todolist;
 using demoAPI.Common.Helper;
@@ -85,9 +88,13 @@ builder.Services.AddSingleton<IJwtAuthenticationHelper>(new JwtAuthenticationHel
 
 //dependency
 builder.Services.AddScoped<IMemberBLL, MemberBLL>();
+builder.Services.AddScoped<IDSItemBLL, DSItemBLL>();
+builder.Services.AddScoped<IDSItemSubBLL, DSItemSubBLL>();
 builder.Services.AddScoped<ITodolistBLL, TodolistBLL>();
 builder.Services.AddScoped<ITodolistDoneBLL, TodolistDoneBLL>();
 builder.Services.AddScoped<IDSBLL, DSBLL>();
+builder.Services.AddScoped<ICommonBLL, CommonBLL>();
+builder.Services.AddScoped<IDSAccountBLL, DSAccountBLL>();
 //END================
 
 builder.Services.AddDbContext<DSContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DSConnection")));
@@ -116,6 +123,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("AllowAll");
+
 app.UseHttpsRedirection();
 app.UseMyMiddleware();
 app.UseMiddleware<ExMiddleware>();
@@ -124,7 +133,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-app.UseCors("AllowAll");
 
 app.Run();

@@ -14,6 +14,8 @@ namespace demoAPI.Common.Mapper
             CreateMap<TodolistAddReq, Todolist>();
             CreateMap<TodolistDoneAddReq, TodolistDone>();
             CreateMap<TodolistDoneEditReq, TodolistDone>();
+            CreateMap<DSItemAddReq, DSItem>();
+            CreateMap<DSItemSubAddReq, DSItemSub>();
         }
     }
 }

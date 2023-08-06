@@ -2,6 +2,7 @@
 using demoAPI.Model;
 using Microsoft.EntityFrameworkCore;
 using demoAPI.Model.TodlistsDone;
+using System;
 
 namespace demoAPI.Data.DS
 {
@@ -30,6 +31,14 @@ namespace demoAPI.Data.DS
             modelBuilder.Entity<Member>().ToTable("Member");
             modelBuilder.Entity<Todolist>().ToTable("Todolist");
             modelBuilder.Entity<TodolistDone>().ToTable("TodolistDone");
+
+            modelBuilder.Entity<DSItem>()
+            .HasIndex(x => new { x.MemberID, x.Name })
+            .IsUnique(true);
+
+            modelBuilder.Entity<DSItemSub>()
+            .HasIndex(x => new { x.DSItemID, x.Name })
+            .IsUnique(true);
         }
     }
 }

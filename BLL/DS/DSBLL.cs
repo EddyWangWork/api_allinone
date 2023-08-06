@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using demoAPI.Common.Enum;
 using demoAPI.Data.DS;
 using demoAPI.Model.DS;
 using demoAPI.Model.Exceptions;
@@ -67,6 +68,84 @@ namespace demoAPI.BLL.DS
             return res2;
         }
 
+        public async Task<IEnumerable<DSTransactionDtoV2>> GetDSTransactionAsyncV2()
+        {
+            var finalRes = new List<DSTransactionDtoV2>();
+
+            var responses = (
+                 from a in _context.DSTransactions
+                 join b in _context.DSAccounts on a.DSAccountID equals b.ID
+                 join c in _context.DSTypes on a.DSTypeID equals c.ID
+                 join d in _context.DSItems on a.DSItemID equals d.ID into dd
+                 from d2 in dd.DefaultIfEmpty()
+                 join e in _context.DSItemSubs on a.DSItemSubID equals e.ID into ee
+                 from e2 in ee.DefaultIfEmpty()
+                 join f in _context.DSItems on e2.DSItemID equals f.ID into ff
+                 from f2 in ff.DefaultIfEmpty()
+                 join g in _context.DSTransactions on a.DSTransferOutID equals g.ID into gg
+                 from g2 in gg.DefaultIfEmpty()
+                 join h in _context.DSAccounts on g2.DSAccountID equals h.ID into hh
+                 from h2 in hh.DefaultIfEmpty()
+                 where a.MemberID == MemberId
+                 select new DSTransactionDto
+                 {
+                     DSTypeName = c.Name,
+                     DSAccountName = b.Name,
+                     DSItemName = c.ID == 4 ? h2.Name : d2.ID > 0 ? d2.Name : $"{f2.Name}|{e2.Name}",
+                     ID = a.ID,
+                     DSTypeID = a.DSTypeID,
+                     DSAccountID = a.DSAccountID,
+                     DSTransferOutID = a.DSTransferOutID,
+                     DSItemID = a.DSItemID,
+                     DSItemSubID = a.DSItemSubID,
+                     Description = a.Description,
+                     CreatedDateTime = a.CreatedDateTime,
+                     Amount = a.Amount,
+                 }).ToListAsync();
+
+            var dsTransactions = await responses;
+
+            var dsaccountids = dsTransactions.DistinctBy(x => x.DSAccountID).Select(x => x.DSAccountID);
+            List<int> expensesList = new List<int> { (int)EnumDSTranType.Expense, (int)EnumDSTranType.TransferOut };
+            int rowID = 0;
+
+            foreach (var dsaccountid in dsaccountids)
+            {
+                decimal balance = 0;
+                var dsTransactionsByAcc = dsTransactions.Where(x => x.DSAccountID == dsaccountid).OrderBy(x => x.CreatedDateTime);
+
+                foreach (var dsTransactionByAcc in dsTransactionsByAcc)
+                {
+                    var dsTransferOutTran = new DSTransactionDto();
+                    if (dsTransactionByAcc.DSTypeID == 3)
+                    {
+                        dsTransferOutTran = dsTransactions.FirstOrDefault(x => x.DSTransferOutID == dsTransactionByAcc.ID);
+                    }
+
+                    balance = expensesList.Contains(dsTransactionByAcc.DSTypeID) ? balance - dsTransactionByAcc.Amount : balance + dsTransactionByAcc.Amount;
+                    finalRes.Add(new DSTransactionDtoV2
+                    {
+                        RowID = rowID++,
+                        DSTypeName = dsTransactionByAcc.DSTypeName,
+                        DSAccountName = dsTransactionByAcc.DSAccountName,
+                        DSItemName = dsTransactionByAcc.DSTypeID == 3 ?
+                            dsTransferOutTran.DSAccountName :
+                            dsTransactionByAcc.DSItemName,
+                        ID = dsTransactionByAcc.ID,
+                        DSTypeID = dsTransactionByAcc.DSTypeID,
+                        DSAccountID = dsTransactionByAcc.DSAccountID,
+                        DSAccountToID = dsTransactionByAcc.DSTypeID == 3 ? dsTransferOutTran.DSAccountID : 0,
+                        DSTransferOutID = dsTransactionByAcc.DSTransferOutID,
+                        Description = dsTransactionByAcc.Description,
+                        CreatedDateTime = dsTransactionByAcc.CreatedDateTime,
+                        Amount = dsTransactionByAcc.Amount,
+                        Balance = balance
+                    }); ;
+                }
+            }
+            return finalRes.OrderByDescending(x => x.CreatedDateTime).ThenByDescending(x => x.RowID);
+        }
+
         public async Task<DSTransactionDto> Add(DSTransactionReq req)
         {
             var entity = _mapper.Map<DSTransaction>(req);
@@ -84,6 +163,7 @@ namespace demoAPI.BLL.DS
                     Description = entity.Description,
                     DSAccountID = req.DSAccountToID,
                     DSTransferOutID = entity.ID,
+                    CreatedDateTime = req.CreatedDateTime,
                     MemberID = MemberId
                 };
                 _context.DSTransactions.Add(entityToAccount);

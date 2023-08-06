@@ -42,7 +42,7 @@ namespace demoAPI.BLL.Todolist
 
             var todolistdone = await responses;
 
-            return todolistdone;
+            return todolistdone.OrderByDescending(x => x.UpdateDate).ToList();
         }
 
         public async Task<TodolistDone> Add(TodolistDoneAddReq req)

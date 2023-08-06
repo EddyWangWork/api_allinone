@@ -25,7 +25,8 @@ namespace demoAPI.Middleware
                     code = HttpStatusCode.Unauthorized;
                     break;
                 case ArgumentException
-                    or InvalidOperationException:
+                    or InvalidOperationException
+                    or BadRequestException:
                     code = HttpStatusCode.BadRequest;
                     break;
                 default:

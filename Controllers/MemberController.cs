@@ -12,17 +12,14 @@ namespace demoAPI.Controllers
     [Route("[controller]")]
     public class MemberController : ControllerBase
     {
-        private readonly DSContext _context;
         private readonly IMapper _mapper;
         private readonly IMemberBLL _memberBLL;
 
-        private readonly List<int> _transferTypes = new() { 3, 4 };
 
-        public MemberController(DSContext context, IMapper mapper, IMemberBLL memberBLL)
+        public MemberController(IMapper mapper, IMemberBLL memberBLL)
         {
-            _context = context;
             _mapper = mapper;
-            _memberBLL = memberBLL ?? throw new ArgumentNullException(nameof(memberBLL));
+            _memberBLL = memberBLL;
         }
 
         [AllowAnonymous]

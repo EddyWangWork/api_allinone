@@ -16,6 +16,6 @@ namespace demoAPI.Model.TodlistsDone
 
         public DateTime UpdateDate => DateTimeHelper.UnixToDateTimeMSec(_unixUpdateTime);
 
-        public string Remark { get; set; }
+        public string? Remark { get; set; }
     }
 }

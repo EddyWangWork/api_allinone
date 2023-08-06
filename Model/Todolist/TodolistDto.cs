@@ -8,4 +8,10 @@
         public string Description { get; set; }
         public DateTime UpdateDate { get; set; }
     }
+
+    public class TodolistDtoTemp : TodolistDto
+    {
+        public DateTime DoneDate { get; set; }
+        public int TodolistDoneID { get; set; }
+    }
 }

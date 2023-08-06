@@ -9,7 +9,7 @@ namespace demoAPI.Model
         [Required(ErrorMessage = "You should fill out a Name.")]
         public string Name { get; set; }
 
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [EnumDataType(typeof(EnumTodolistType), ErrorMessage = "CategoryId should correct")]
         public int CategoryId { get; set; }

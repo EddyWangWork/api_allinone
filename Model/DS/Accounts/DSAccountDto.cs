@@ -2,14 +2,11 @@
 
 namespace demoAPI.Model.DS
 {
-    public class DSItem
+    public class DSAccountDto
     {
         public int ID { get; set; }
         public string Name { get; set; }
+        public decimal Balance { get; set; }
         public bool IsActive { get; set; }
-        public int MemberID { get; set; }
-
-        public ICollection<DSItemSub> DSItemSubs { get; set; }
-        public Member Member { get; set; }
     }
 }

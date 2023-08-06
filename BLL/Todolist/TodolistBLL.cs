@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using demoAPI.BLL.Member;
+using demoAPI.Common.Enum;
 using demoAPI.Common.Helper;
 using demoAPI.Data.DS;
 using demoAPI.Middleware;
@@ -24,25 +25,54 @@ namespace demoAPI.BLL.Todolist
 
         public async Task<List<TodolistDto>> GetTodolistsUndone()
         {
-            var responses = (
+            var todolists = new List<TodolistDto>();
+
+            try
+            {
+                var responses = (
                  from a in _context.Todolists
                  join b in _context.TodolistsDone on a.ID equals b.TodolistID into bb
                  from b2 in bb.DefaultIfEmpty()
                  where
-                    a.MemberID == MemberId &&
-                    (b2.UpdateDate.Month != DateTime.Now.Month || b2.UpdateDate == null)
-                 select new TodolistDto
+                    a.MemberID == MemberId && a.CategoryID == (int)EnumTodolistType.Monthly
+                 select new TodolistDtoTemp
                  {
                      ID = a.ID,
                      Name = a.Name,
                      CategoryID = a.CategoryID,
                      Description = a.Description ?? string.Empty,
                      UpdateDate = a.UpdateDate,
+                     DoneDate = b2.UpdateDate != null ? b2.UpdateDate : DateTime.MinValue,
+                     TodolistDoneID = b2.ID != null ? b2.ID : 0
                  }).ToListAsync();
 
-            var todolist = await responses;
+                var todolistsTemp = await responses;
 
-            return todolist;
+                var todolistsG = todolistsTemp.GroupBy(x => x.Name);
+
+                foreach (var todolistG in todolistsG)
+                {
+                    if (todolistG.Any(x => x.DoneDate.Year == DateTime.Now.Year && x.DoneDate.Month == DateTime.Now.Month))
+                        continue;
+
+                    var todolist = todolistG.FirstOrDefault();
+
+                    todolists.Add(new TodolistDto
+                    {
+                        ID = todolist.ID,
+                        Name = todolist.Name,
+                        CategoryID = todolist.CategoryID,
+                        Description = todolist.Description,
+                        UpdateDate = todolist.UpdateDate
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+            return todolists.OrderByDescending(x => x.UpdateDate).ToList();
         }
 
         public async Task<Model.Todolist> Add(TodolistAddReq req)
