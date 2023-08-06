@@ -78,7 +78,7 @@ namespace demoAPI.BLL.Member
                 }
             }
 
-            return resss;
+            return resss.OrderBy(x => x.Name).ThenBy(x => x.SubName);
         }
 
         public async Task<IEnumerable<DSItemWithSubDtoV3>> GetDSItemWithSubV3()
