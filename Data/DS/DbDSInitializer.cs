@@ -10,7 +10,7 @@ namespace demoAPI.Data.DS
         {
             context.Database.EnsureCreated();
 
-            if (context.DSItems.Any())
+            if (context.Trips.Any())
             {
                 return;   // DB has been seeded
             }

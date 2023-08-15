@@ -4,6 +4,7 @@ using demoAPI.BLL.DS;
 using demoAPI.BLL.DSItems;
 using demoAPI.BLL.Member;
 using demoAPI.BLL.Todolist;
+using demoAPI.BLL.Trips;
 using demoAPI.Common.Helper;
 using demoAPI.Data.DS;
 using demoAPI.Middleware;
@@ -95,6 +96,7 @@ builder.Services.AddScoped<ITodolistDoneBLL, TodolistDoneBLL>();
 builder.Services.AddScoped<IDSBLL, DSBLL>();
 builder.Services.AddScoped<ICommonBLL, CommonBLL>();
 builder.Services.AddScoped<IDSAccountBLL, DSAccountBLL>();
+builder.Services.AddScoped<ITripBLL, TripBLL>();
 //END================
 
 builder.Services.AddDbContext<DSContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DSConnection")));

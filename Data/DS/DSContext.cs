@@ -3,6 +3,7 @@ using demoAPI.Model;
 using Microsoft.EntityFrameworkCore;
 using demoAPI.Model.TodlistsDone;
 using System;
+using demoAPI.Model.Trip;
 
 namespace demoAPI.Data.DS
 {
@@ -21,6 +22,10 @@ namespace demoAPI.Data.DS
         public DbSet<Todolist> Todolists { get; set; }
         public DbSet<TodolistDone> TodolistsDone { get; set; }
 
+        public DbSet<TripDetailType> TripDetailTypes { get; set; }
+        public DbSet<TripDetail> TripDetails { get; set; }
+        public DbSet<Trip> Trips { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<DSItem>().ToTable("DSItem");
@@ -31,6 +36,10 @@ namespace demoAPI.Data.DS
             modelBuilder.Entity<Member>().ToTable("Member");
             modelBuilder.Entity<Todolist>().ToTable("Todolist");
             modelBuilder.Entity<TodolistDone>().ToTable("TodolistDone");
+
+            modelBuilder.Entity<TripDetailType>().ToTable("TripDetailType");
+            modelBuilder.Entity<TripDetail>().ToTable("TripDetail");
+            modelBuilder.Entity<Trip>().ToTable("Trip");
 
             modelBuilder.Entity<DSItem>()
             .HasIndex(x => new { x.MemberID, x.Name })
