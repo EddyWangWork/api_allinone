@@ -68,7 +68,7 @@ namespace demoAPI.BLL.DS
             return res2;
         }
 
-        public async Task<IEnumerable<DSTransactionDtoV2>> GetDSTransactionAsyncV2()
+        public async Task<IEnumerable<DSTransactionDtoV2>> GetDSTransactionAsyncV2(DateTime? dateFrom = null, DateTime? dateTo = null)
         {
             var finalRes = new List<DSTransactionDtoV2>();
 
@@ -106,7 +106,8 @@ namespace demoAPI.BLL.DS
             var dsTransactions = await responses;
 
             var dsaccountids = dsTransactions.DistinctBy(x => x.DSAccountID).Select(x => x.DSAccountID);
-            List<int> expensesList = new List<int> { (int)EnumDSTranType.Expense, (int)EnumDSTranType.TransferOut };
+            List<int> expensesList =
+                new List<int> { (int)EnumDSTranType.Expense, (int)EnumDSTranType.TransferOut, (int)EnumDSTranType.DebitTransferOut };
             int rowID = 0;
 
             foreach (var dsaccountid in dsaccountids)
@@ -143,7 +144,12 @@ namespace demoAPI.BLL.DS
                     }); ;
                 }
             }
-            return finalRes.OrderByDescending(x => x.CreatedDateTime).ThenByDescending(x => x.RowID);
+            var finalResOrdered = finalRes.OrderByDescending(x => x.CreatedDateTime).ThenByDescending(x => x.RowID);
+            if (dateFrom == null || dateTo == null)
+            {
+                return finalResOrdered;
+            }
+            return finalResOrdered.Where(x => x.CreatedDateTime >= dateFrom && x.CreatedDateTime <= dateTo);
         }
 
         public async Task<DSTransactionDto> Add(DSTransactionReq req)

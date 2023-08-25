@@ -16,7 +16,7 @@ namespace demoAPI.Controllers
         private readonly IDSBLL _dsBLL;
 
         private readonly List<int> _transferTypes = new() { 3, 4 };
-        private readonly List<int> _validTransTypes = new() { 1, 2, 3 };
+        private readonly List<int> _validTransTypes = new() { 1, 2, 3, 31, 41 };
 
         public DSController(DSContext context, IMapper mapper, IDSBLL dsBLL)
         {
@@ -58,6 +58,12 @@ namespace demoAPI.Controllers
         public async Task<IActionResult> GetDSTransactionAsyncV2()
         {
             return Ok(await _dsBLL.GetDSTransactionAsyncV2());
+        }
+
+        [HttpPost("getDSTransactionWithDate")]
+        public async Task<IActionResult> GetDSTransactionWithDateAsync(DSTransactionWithDateReq req)
+        {
+            return Ok(await _dsBLL.GetDSTransactionAsyncV2(req.DateFrom, req.DateTo));
         }
 
         [HttpPost]

@@ -14,4 +14,10 @@ namespace demoAPI.Model.DS
         public decimal Amount { get; set; }
         public DateTime CreatedDateTime { get; set; }
     }
+
+    public class DSTransactionWithDateReq
+    {
+        public DateTime DateFrom { get; set; }
+        public DateTime DateTo { get; set; }
+    }
 }

@@ -41,7 +41,8 @@ namespace demoAPI.BLL
                     b.IsActive,
                     a.DSAccountID,
                     a.DSTypeID,
-                    a.Amount
+                    a.Amount,
+                    a.CreatedDateTime
                 }).ToListAsync();
 
             var transationsTemp = await responses;
@@ -53,14 +54,15 @@ namespace demoAPI.BLL
                 var incomes = transationsTemp.Where(x => x.DSAccountID == dsAccountID && incomeList.Contains(x.DSTypeID)).Sum(x => x.Amount);
                 var expenses = transationsTemp.Where(x => x.DSAccountID == dsAccountID && expensesList.Contains(x.DSTypeID)).Sum(x => x.Amount);
 
-                var transation = transationsTemp.FirstOrDefault(x => x.DSAccountID == dsAccountID);
+                var transation = transationsTemp.OrderByDescending(x => x.CreatedDateTime).FirstOrDefault(x => x.DSAccountID == dsAccountID);
 
                 dsAccounts.Add(new DSAccountDto
                 {
                     ID = dsAccountID,
                     Name = transation.DSAccountName,
                     IsActive = transation.IsActive,
-                    Balance = incomes - expenses
+                    Balance = incomes - expenses,
+                    CreatedDateTime = transation.CreatedDateTime,
                 });
             }
 
