@@ -34,7 +34,7 @@ namespace demoAPI.BLL.Todolist
                  join b in _context.TodolistsDone on a.ID equals b.TodolistID into bb
                  from b2 in bb.DefaultIfEmpty()
                  where
-                    a.MemberID == MemberId && a.CategoryID == (int)EnumTodolistType.Monthly
+                    a.MemberID == MemberId
                  select new TodolistDtoTemp
                  {
                      ID = a.ID,

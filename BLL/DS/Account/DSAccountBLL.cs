@@ -17,8 +17,10 @@ namespace demoAPI.BLL
         private readonly DSContext _context;
         private readonly IMapper _mapper;
 
-        private readonly List<int> expensesList = new List<int> { (int)EnumDSTranType.Expense, (int)EnumDSTranType.TransferOut };
-        private readonly List<int> incomeList = new List<int> { (int)EnumDSTranType.Income, (int)EnumDSTranType.TransferIn };
+        private readonly List<int> expensesList = new List<int> {
+            (int)EnumDSTranType.Expense, (int)EnumDSTranType.TransferOut, (int)EnumDSTranType.DebitTransferOut };
+        private readonly List<int> incomeList = new List<int> {
+            (int)EnumDSTranType.Income, (int)EnumDSTranType.TransferIn, (int)EnumDSTranType.CreditTransferIn };
 
         public DSAccountBLL(DSContext context, IMapper mapper)
         {
