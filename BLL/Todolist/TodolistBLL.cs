@@ -52,7 +52,11 @@ namespace demoAPI.BLL.Todolist
 
                 foreach (var todolistG in todolistsG)
                 {
-                    if (todolistG.Any(x => x.DoneDate.Year == DateTime.Now.Year && x.DoneDate.Month == DateTime.Now.Month))
+                    if ((todolistG.Any(x => x.CategoryID == (int)EnumTodolistType.Monthly
+                            && x.DoneDate.Year == DateTime.Now.Year
+                            && x.DoneDate.Month == DateTime.Now.Month)) ||
+                        todolistG.Any(x => x.CategoryID == (int)EnumTodolistType.Normal 
+                            && x.TodolistDoneID > 0))
                         continue;
 
                     var todolist = todolistG.FirstOrDefault();
