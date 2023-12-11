@@ -3,7 +3,6 @@ using demoAPI.Common.Enum;
 using demoAPI.Data.DS;
 using demoAPI.Model.DS;
 using demoAPI.Model.Exceptions;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace demoAPI.BLL.DS
@@ -19,6 +18,131 @@ namespace demoAPI.BLL.DS
         {
             _context = context;
             _mapper = mapper;
+        }
+
+        public async Task<DSYearExpenses> GetDSYearExpensesAsync(int year)
+        {
+            var responses = (
+                 from a in _context.DSTransactions
+                 join b in _context.DSItems on a.DSItemID equals b.ID into bb
+                 from b2 in bb.DefaultIfEmpty()
+                 join c in _context.DSItemSubs on a.DSItemSubID equals c.ID into cc
+                 from c2 in cc.DefaultIfEmpty()
+                 join d in _context.DSItems on c2.DSItemID equals d.ID into dd
+                 from d2 in dd.DefaultIfEmpty()
+                 where
+                    a.DSTypeID == (int)EnumDSTranType.Expense &&
+                    (a.CreatedDateTime.Year == year)
+                 select new
+                 {
+                     DSItemName = b2.ID > 0 ? b2.Name : $"{d2.Name}",
+                     DSYearMonthOri = a.CreatedDateTime,
+                     DSYearMonth = $"{a.CreatedDateTime.Month}",
+                     //DSYearMonth = $"{a.CreatedDateTime.Year}-{a.CreatedDateTime.Month}",
+                     Amount = a.Amount,
+                 }).ToListAsync();
+
+            var res = await responses;
+            var resGroupby = res.GroupBy(x => new { x.DSYearMonth, x.DSItemName }).
+                Select(y => new
+                {
+                    YearMonth = y.First().DSYearMonth,
+                    ItemName = y.First().DSItemName,
+                    Amount = y.Sum(x => x.Amount)
+                }).ToList();
+
+            var distYearMonths = res.OrderBy(x => x.DSYearMonthOri).DistinctBy(x => x.DSYearMonth).Select(x => x.DSYearMonth);
+            var distItemNames = res.OrderBy(x=>x.DSItemName).DistinctBy(x => x.DSItemName).Select(x => x.DSItemName);
+            DSYearExpenses dsYearExpenses = new DSYearExpenses { DSItemNames = distItemNames.ToList() };
+
+            foreach (var yearMonth in distYearMonths)
+            {
+                DSYearDetails dsYearDetails = new DSYearDetails() { YearMonth = yearMonth };
+
+                foreach (var distItemName in distItemNames)
+                {
+                    var amount = resGroupby.FirstOrDefault(x => x.YearMonth == yearMonth && x.ItemName == distItemName)?.Amount;
+                    dsYearDetails.Amount.Add(amount ?? 0);
+                }
+
+                dsYearExpenses.DSYearDetails.Add(dsYearDetails);
+            }
+            return dsYearExpenses;
+        }
+
+        public async Task<IEnumerable<DSYearCreditDebitDiff>> GetDSYearCreditDebitDiffAsync(int year)
+        {
+            List<int> CreditDebitList = new List<int> { (int)EnumDSTranType.Income, (int)EnumDSTranType.Expense };
+
+            var responses = (
+                 from a in _context.DSTransactions
+                 join b in _context.DSItems on a.DSItemID equals b.ID into bb
+                 from b2 in bb.DefaultIfEmpty()
+                 join c in _context.DSItemSubs on a.DSItemSubID equals c.ID into cc
+                 from c2 in cc.DefaultIfEmpty()
+                 join d in _context.DSItems on c2.DSItemID equals d.ID into dd
+                 from d2 in dd.DefaultIfEmpty()
+                 where
+                    CreditDebitList.Contains(a.DSTypeID) &&
+                    (a.CreatedDateTime.Year == year)
+                 select new
+                 {
+                     DSItemName = b2.ID > 0 ? b2.Name : $"{d2.Name}",
+                     a.DSTypeID,
+                     DSYearMonthOri = a.CreatedDateTime,
+                     DSYearMonth = $"{a.CreatedDateTime.Year}-{a.CreatedDateTime.Month}",
+                     Amount = a.Amount,
+                 }).ToListAsync();
+
+            var res = await responses;
+            var resGroupby = res.GroupBy(x => new { x.DSYearMonth, x.DSTypeID }).
+                Select(y => new
+                {
+                    YearMonth = y.First().DSYearMonth,
+                    Type = y.First().DSTypeID,
+                    Amount = y.Sum(x => x.Amount)
+                }).ToList();
+            List<DSYearCreditDebitDiff> dsYearCreditDebitDiff = new List<DSYearCreditDebitDiff>();
+            var ssssff = res.DistinctBy(x => x.DSYearMonth);
+            foreach (var yearMonth in res.OrderBy(x => x.DSYearMonthOri).DistinctBy(x => x.DSYearMonth).Select(x => x.DSYearMonth))
+            {
+                var credit = resGroupby.FirstOrDefault(x => x.YearMonth == yearMonth && x.Type == (int)EnumDSTranType.Income)?.Amount;
+                var debit = resGroupby.FirstOrDefault(x => x.YearMonth == yearMonth && x.Type == (int)EnumDSTranType.Expense)?.Amount;
+                var diff = credit - debit;
+
+                dsYearCreditDebitDiff.Add(new DSYearCreditDebitDiff
+                {
+                    YearMonth = yearMonth,
+                    Credit = credit ?? 0,
+                    Debit = debit ?? 0,
+                    Diff = diff ?? 0
+                });
+            }
+            return dsYearCreditDebitDiff;
+        }
+
+        public async Task<IEnumerable<DSDebitStat>> GetDSMonthlyExpensesAsync(int year, int month)
+        {
+            var responses = (
+                 from a in _context.DSTransactions
+                 join b in _context.DSItems on a.DSItemID equals b.ID into bb
+                 from b2 in bb.DefaultIfEmpty()
+                 join c in _context.DSItemSubs on a.DSItemSubID equals c.ID into cc
+                 from c2 in cc.DefaultIfEmpty()
+                 join d in _context.DSItems on c2.DSItemID equals d.ID into dd
+                 from d2 in dd.DefaultIfEmpty()
+                 where
+                    a.DSTypeID == (int)EnumDSTranType.Expense &&
+                    (a.CreatedDateTime.Year == year && a.CreatedDateTime.Month == month)
+                 select new DSDebitStat
+                 {
+                     DSItemName = b2.ID > 0 ? b2.Name : $"{d2.Name}",
+                     Amount = a.Amount,
+                 }).ToListAsync();
+
+            var res = await responses;
+            res = res.GroupBy(x => x.DSItemName).Select(y => new DSDebitStat { DSItemName = y.First().DSItemName, Amount = y.Sum(x => x.Amount) }).ToList();
+            return res.OrderByDescending(x => x.Amount);
         }
 
         public async Task<IEnumerable<DSTransactionDto>> GetDSTransactionAsync()

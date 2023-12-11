@@ -25,8 +25,26 @@ namespace demoAPI.Controllers
             _dsBLL = dsBLL;
         }
 
+        [HttpGet("getDSYearExpenses")]
+        public async Task<IActionResult> GetDSYearExpenses(int year)
+        {
+            return Ok(await _dsBLL.GetDSYearExpensesAsync(year));
+        }
+
+        [HttpGet("getDSYearCreditDebitDiff")]
+        public async Task<IActionResult> GetDSYearCreditDebitDiff(int year)
+        {
+            return Ok(await _dsBLL.GetDSYearCreditDebitDiffAsync(year));
+        }
+
+        [HttpGet("getDSMonthlyExpenses")]
+        public async Task<IActionResult> GetDSMonthlyExpensesAsync(int year, int month)
+        {
+            return Ok(await _dsBLL.GetDSMonthlyExpensesAsync(year, month));
+        }
+
         [HttpGet("getTransactionGroupStat")]
-        public async Task<IActionResult> GetDebitStat(int dstypeid)
+        public async Task<IActionResult> GetDebitStat(int dstypeid, int year, int month)
         {
             var responses = (
                  from a in _context.DSTransactions
@@ -36,7 +54,9 @@ namespace demoAPI.Controllers
                  from c2 in cc.DefaultIfEmpty()
                  join d in _context.DSItems on c2.DSItemID equals d.ID into dd
                  from d2 in dd.DefaultIfEmpty()
-                 where a.DSTypeID == dstypeid
+                 where
+                    a.DSTypeID == dstypeid &&
+                    (a.CreatedDateTime.Year == year && a.CreatedDateTime.Month == month)
                  select new DSDebitStat
                  {
                      DSItemName = b2.ID > 0 ? b2.Name : $"{d2.Name}|{c2.Name}",
