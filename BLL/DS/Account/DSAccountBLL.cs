@@ -35,7 +35,7 @@ namespace demoAPI.BLL
             var responses = (
                 from a in _context.DSTransactions
                 join b in _context.DSAccounts on a.DSAccountID equals b.ID
-                where a.MemberID == MemberId && b.IsActive == true
+                where a.MemberID == MemberId
                 select new
                 {
                     b.ID,
