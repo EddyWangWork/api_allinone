@@ -2,6 +2,7 @@ using demoAPI.BLL;
 using demoAPI.BLL.Common;
 using demoAPI.BLL.DS;
 using demoAPI.BLL.DSItems;
+using demoAPI.BLL.Kanbans;
 using demoAPI.BLL.Member;
 using demoAPI.BLL.Todolist;
 using demoAPI.BLL.Trips;
@@ -97,6 +98,7 @@ builder.Services.AddScoped<IDSBLL, DSBLL>();
 builder.Services.AddScoped<ICommonBLL, CommonBLL>();
 builder.Services.AddScoped<IDSAccountBLL, DSAccountBLL>();
 builder.Services.AddScoped<ITripBLL, TripBLL>();
+builder.Services.AddScoped<IKanbanBLL, KanbanBLL>();
 //END================
 
 builder.Services.AddDbContext<DSContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DSConnection")));

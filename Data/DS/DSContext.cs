@@ -1,9 +1,9 @@
-﻿using demoAPI.Model.DS;
-using demoAPI.Model;
-using Microsoft.EntityFrameworkCore;
+﻿using demoAPI.Model;
+using demoAPI.Model.DS;
+using demoAPI.Model.Kanbans;
 using demoAPI.Model.TodlistsDone;
-using System;
 using demoAPI.Model.Trip;
+using Microsoft.EntityFrameworkCore;
 
 namespace demoAPI.Data.DS
 {
@@ -25,6 +25,7 @@ namespace demoAPI.Data.DS
         public DbSet<TripDetailType> TripDetailTypes { get; set; }
         public DbSet<TripDetail> TripDetails { get; set; }
         public DbSet<Trip> Trips { get; set; }
+        public DbSet<Kanban> Kanbans { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -40,6 +41,7 @@ namespace demoAPI.Data.DS
             modelBuilder.Entity<TripDetailType>().ToTable("TripDetailType");
             modelBuilder.Entity<TripDetail>().ToTable("TripDetail");
             modelBuilder.Entity<Trip>().ToTable("Trip");
+            modelBuilder.Entity<Kanban>().ToTable("Kanban");
 
             modelBuilder.Entity<DSItem>()
             .HasIndex(x => new { x.MemberID, x.Name })
