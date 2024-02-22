@@ -25,6 +25,7 @@ namespace demoAPI.Middleware
             List<string> whitePages = new List<string>
             {
                 "/Member/login",
+                "/Member/loginV2",
                 "/Member/signup",
                 "/Common/getDSTransTypes",
                 "/Common/getTodolistTypes",

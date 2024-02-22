@@ -1,9 +1,7 @@
 ﻿using AutoMapper;
-using demoAPI.Common.Helper;
 using demoAPI.Data.DS;
 using demoAPI.Model.Exceptions;
 using demoAPI.Model.Trip;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace demoAPI.BLL.Trips
@@ -32,6 +30,7 @@ namespace demoAPI.BLL.Trips
                      TripName = c.Name,
                      a.Date,
                      TripDetailTypeName = b.Name,
+                     TripDetailNameID = a.ID,
                      TripDetailName = a.Name,
                      TripDetailNameLink = a.LinkName
                  }).ToListAsync();
@@ -42,7 +41,7 @@ namespace demoAPI.BLL.Trips
             var tripsInfo = await _context.Trips.ToListAsync();
             var tripDetailTypes = await _context.TripDetailTypes.ToListAsync();
 
-            var tripDistinctTypeNames = tripDetailTypes.Select(x => x.Name);
+            var tripDistinctTypeInfos = tripDetailTypes.Select(x => new { x.ID, x.Name });
             var tripGDates = tripDetails.GroupBy(x => new { x.TripName, x.Date });
 
             foreach (var tripInfo in tripsInfo)
@@ -53,18 +52,17 @@ namespace demoAPI.BLL.Trips
 
                 for (int i = 0; i < diffDay.Days + 1; i++)
                 {
-                    var tripGTypesDto = new List<TripDetailTypeDto>();
-                    var tripDetailDtos = new List<TripDetailDto>();
+                    var tripGTypesDto = new List<TripDetailTypeDto>();                    
 
                     var tripDate = tripInfo.FromDate.AddDays(i);
                     var tripGTypes = tripGDates.FirstOrDefault(x => x.Key.TripName == tripInfo.Name && x.Key.Date == tripDate)?.GroupBy(y => y.TripDetailTypeName);
 
-                    foreach (var tripDistinctTypeName in tripDistinctTypeNames)
-                    {
-                        //var typeValues = tripGTypes?.FirstOrDefault(x => x.Key == tripDistinctTypeName)?.Select(x => x.TripDetailName)?.ToList();
-                        var typeValues = tripGTypes?.FirstOrDefault(x => x.Key == tripDistinctTypeName)?.
+                    foreach (var tripDistinctTypeInfo in tripDistinctTypeInfos)
+                    {                        
+                        var typeValues = tripGTypes?.FirstOrDefault(x => x.Key == tripDistinctTypeInfo.Name)?.
                             Select(x => new TripDetailTypeValueDto
                             {
+                                TypeValueID = x.TripDetailNameID,
                                 TypeValue = x.TripDetailName,
                                 TypeVTypeLink = (x.TripDetailNameLink == null || x.TripDetailNameLink == string.Empty) ? string.Empty : x.TripDetailNameLink
                             })?
@@ -72,35 +70,26 @@ namespace demoAPI.BLL.Trips
 
                         if (tripGTypes == null || typeValues == null)
                         {
-                            typeValues = new List<TripDetailTypeValueDto> { new TripDetailTypeValueDto { TypeValue = "-", TypeVTypeLink = string.Empty } };
+                            typeValues = new List<TripDetailTypeValueDto> { new TripDetailTypeValueDto {  TypeValue = "-", TypeVTypeLink = string.Empty } };
                         }
 
                         tripGTypesDto.Add(new TripDetailTypeDto
                         {
-                            TypeName = tripDistinctTypeName,
-                            TypeValues = typeValues
+                            TypeID = tripDistinctTypeInfo.ID,
+                            TypeName = tripDistinctTypeInfo.Name,
+                            TypeValues = typeValues,
                         });
-
-
-                        if (tripGTypesDto.Count() == 3)
-                        {
-                            tripDetailDtos.Add(new TripDetailDto { TripDetailTypesInfo = tripGTypesDto });
-                            tripGTypesDto = new List<TripDetailTypeDto>();
-                        }
-                        else if (tripDistinctTypeNames.Last() == tripDistinctTypeName && tripGTypesDto.Count() != 3)
-                        {
-                            tripDetailDtos.Add(new TripDetailDto { TripDetailTypesInfo = tripGTypesDto });
-                        }
                     }
                     tripsDto.Add(new TripDto
                     {
                         Date = tripDate,
-                        TripDetailDtos = tripDetailDtos
+                        TripDetailDto = new TripDetailDto { TripDetailTypesInfo = tripGTypesDto }
                     });
                 }
 
                 tripResultsDto.Add(new TripResultDto
                 {
+                    ID = tripInfo.ID,
                     Name = tripInfo.Name,
                     TripDtos = tripsDto
                 });
@@ -125,6 +114,19 @@ namespace demoAPI.BLL.Trips
                 throw new NotFoundException("trip Record not found");
 
             _mapper.Map(req, entity);
+
+            var tripDetails = await _context.TripDetails.Where(x => x.TripID == id).ToListAsync();
+            var tripDetailDates = tripDetails.GroupBy(x => x.Date).Select(x => x.Key);
+
+            foreach (var tripDetailDate  in tripDetailDates)
+            {
+                if (!(req.FromDate >= tripDetailDate &&  tripDetailDate <= req.ToDate)) //delete detail info if trip date not in range
+                {
+                    var tripDetailsDelete = tripDetails.Where(x => x.Date == tripDetailDate);
+                    _context.TripDetails.RemoveRange(tripDetailsDelete);
+                }
+            }
+
             _context.SaveChanges();
 
             return entity;

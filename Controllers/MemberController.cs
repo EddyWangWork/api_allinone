@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using demoAPI.BLL.Member;
 using demoAPI.Common.Helper;
-using demoAPI.Data.DS;
 using demoAPI.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -35,6 +34,28 @@ namespace demoAPI.Controllers
             }
 
             return Ok(new { token });
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("loginV2")]
+        public async Task<IActionResult> LoginV2(MemberLoginReq req)
+        {
+            var member = _memberBLL.LoginV2(req.Name, req.Password);
+
+            if (member.IsNullOrEmpty())
+            {
+                return Unauthorized("Username or password incorrect");
+            }
+
+            return Ok(member);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Edit(int id, MemberLoginReq req)
+        {
+            var response = await _memberBLL.Edit(id, req);
+            return Ok(response);
         }
     }
 }

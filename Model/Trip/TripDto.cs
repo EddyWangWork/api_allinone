@@ -3,16 +3,12 @@
     public class TripDto
     {
         public DateTime Date { get; set; }
-        public List<TripDetailDto> TripDetailDtos { get; set; }
-
-        public TripDto()
-        {
-            TripDetailDtos = new List<TripDetailDto>();
-        }
+        public TripDetailDto TripDetailDto { get; set; }
     }
 
     public class TripResultDto
     {
+        public int ID { get; set; }
         public string Name { get; set; }
         public List<TripDto> TripDtos { get; set; }
 

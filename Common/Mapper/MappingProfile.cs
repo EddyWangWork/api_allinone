@@ -26,6 +26,9 @@ namespace demoAPI.Common.Mapper
             CreateMap<TripDetailAddReq, TripDetail>();
 
             CreateMap<KanbanAddReq, Kanban>();
+
+            CreateMap<MemberLoginReq, Member>();
+            CreateMap<Member, MemberDto>();
         }
     }
 }

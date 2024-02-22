@@ -1,7 +1,10 @@
 ﻿using AutoMapper;
+using AutoMapper.Execution;
 using demoAPI.Common.Helper;
 using demoAPI.Data.DS;
 using demoAPI.Model;
+using demoAPI.Model.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace demoAPI.BLL.Member
 {
@@ -34,6 +37,32 @@ namespace demoAPI.BLL.Member
                 UpdateMemberToken(member, token);
                 return token;
             }
+        }
+
+        public MemberDto LoginV2(string name, string password)
+        {
+            var memberDto = new MemberDto();
+
+            var member = _context.Members.FirstOrDefault(x => x.Name == name && x.Password == password) ?? throw new NotFoundException($"Member record not found");
+
+            var token = _jwtAuthenticationHelper.GetToken(name);
+            UpdateMemberToken(member, token);
+
+            _mapper.Map(member, memberDto);
+            return memberDto;
+        }
+
+        public async Task<MemberDto> Edit(int id, MemberLoginReq req)
+        {
+            var memberDto = new MemberDto();
+
+            var entity = await _context.Members.FirstOrDefaultAsync(x => x.ID == id) ?? throw new NotFoundException($"Member record not found");
+
+            _mapper.Map(req, entity);
+            _context.SaveChanges();
+
+            _mapper.Map(entity, memberDto);
+            return memberDto;
         }
 
         public Model.Member GetMemberByToken(string token)
