@@ -25,6 +25,34 @@ namespace demoAPI.Controllers
             _dsBLL = dsBLL;
         }
 
+        #region Dashboard
+
+        [HttpGet("getDSMonthlyItemExpenses")]
+        public async Task<IActionResult> GetDSMonthlyItemExpensesAsync(int year, int month, int monthDuration)
+        {
+            return Ok(await _dsBLL.GetDSMonthlyItemExpensesAsync(year, month, monthDuration));
+        }
+
+        [HttpGet("getDSMonthlyPeriodCreditDebit")]
+        public async Task<IActionResult> GetDSMonthlyPeriodCreditDebitAsync(int year, int month, int monthDuration)
+        {
+            return Ok(await _dsBLL.GetDSMonthlyPeriodCreditDebitAsync(year, month, monthDuration));
+        }
+
+        [HttpGet("getDSMonthlyCommitmentAndOther")]
+        public async Task<IActionResult> GetDSMonthlyCommitmentAndOtherAsync(int year, int month, string name)
+        {
+            return Ok(await _dsBLL.GetDSMonthlyCommitmentAndOtherAsync(year, month, name));
+        }
+
+        [HttpGet("getDSMonthlyExpensesByItem")]
+        public async Task<IActionResult> GetDSMonthlyExpensesByItem(int year, int month, string name, bool isExclude = false)
+        {
+            return Ok(await _dsBLL.GetDSMonthlyExpensesAsync(year, month, name, isExclude));
+        }
+
+        #endregion
+
         [HttpGet("getDSYearExpenses")]
         public async Task<IActionResult> GetDSYearExpenses(int year)
         {

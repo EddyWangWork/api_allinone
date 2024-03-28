@@ -4,6 +4,15 @@ namespace demoAPI.BLL.DS
 {
     public interface IDSBLL
     {
+        #region Dashboard
+
+        Task<IEnumerable<DSMonthlyItemExpenses>> GetDSMonthlyItemExpensesAsync(int year, int month, int monthDuration);
+        Task<IEnumerable<DSMonthlyPeriodCreditDebit>> GetDSMonthlyPeriodCreditDebitAsync(int year, int month, int monthDuration);
+        Task<DSMonthlyExpenses> GetDSMonthlyCommitmentAndOtherAsync(int year, int month, string name);
+        Task<IEnumerable<DSMonthlyExpensesItem>> GetDSMonthlyExpensesAsync(int year, int month, string name, bool isExclude = false);
+
+        #endregion
+
         Task<DSYearExpenses> GetDSYearExpensesAsync(int year);
         Task<IEnumerable<DSYearCreditDebitDiff>> GetDSYearCreditDebitDiffAsync(int year);
         Task<IEnumerable<DSDebitStat>> GetDSMonthlyExpensesAsync(int year, int month);
