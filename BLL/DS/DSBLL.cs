@@ -46,6 +46,8 @@ namespace demoAPI.BLL.DS
                      d2,
                      FinalName = b2 != null ? b2.Name : d2.Name,
                      FinalSubName = b2 != null ? b2.Name : $"{d2.Name}|{c2.Name}",
+                     FinalSubNameOnly = b2 != null ? b2.Name : c2.Name,
+                     a.Description,
                      a.DSTypeID,
                      a.Amount,
                      a.CreatedDateTime,
@@ -131,6 +133,23 @@ namespace demoAPI.BLL.DS
                     });
                 });
 
+                monthlyItems.ForEach(x =>
+                {
+                    var monthlyExpensesItems = new List<DSMonthlyExpensesItem>();
+
+                    res.Where(y => y.FinalName == x.ItemName && y.CreatedDateTimeYearMonth == monthlyDatetime).ToList().ForEach(yy =>
+                    {
+                        monthlyExpensesItems.Add(new DSMonthlyExpensesItem
+                        {
+                            ItemName = yy.FinalSubNameOnly,
+                            Desc = yy.Description,
+                            Amount = yy.Amount
+                        });
+                    });
+
+                    x.ItemsDetail = monthlyExpensesItems.OrderByDescending(x=>x.Amount).ToList();
+                });
+
                 finalRes.Add(new DSMonthlyItemExpenses
                 {
                     YearMonthDatetime = monthlyDatetime,
@@ -202,7 +221,7 @@ namespace demoAPI.BLL.DS
             };
         }
 
-        public async Task<IEnumerable<DSMonthlyExpensesItem>> GetDSMonthlyExpensesAsync(int year, int month, string name, bool isExclude = false) //GetDSThirdMonthlyCreditDebitAsync
+        public async Task<IEnumerable<DSMonthlyExpensesItem>> GetDSMonthlyExpensesAsync(int year, int month, string name, bool isExclude = false)
         {
             var responses = (
                  from a in _context.DSTransactions
@@ -231,31 +250,6 @@ namespace demoAPI.BLL.DS
             });
             var finalRes = isExclude ? resGroupby.OrderByDescending(x => x.Amount) : res.OrderByDescending(x => x.Amount);
             return finalRes;
-        }
-
-        public async Task<IEnumerable<DSMonthlyExpensesItem>> GetDSMonthlyExpensesAsync2(int year, int month, string name) //GetDSThirdMonthlyCreditDebitAsync
-        {
-            var responses = (
-                 from a in _context.DSTransactions
-                 join b in _context.DSItems on a.DSItemID equals b.ID into bb
-                 from b2 in bb.DefaultIfEmpty()
-                 join c in _context.DSItemSubs on a.DSItemSubID equals c.ID into cc
-                 from c2 in cc.DefaultIfEmpty()
-                 join d in _context.DSItems on c2.DSItemID equals d.ID into dd
-                 from d2 in dd.DefaultIfEmpty()
-                 where
-                    a.DSTypeID == (int)EnumDSTranType.Expense &&
-                    d2.Name == name &&
-                    (a.CreatedDateTime.Year == year && a.CreatedDateTime.Month == month)
-                 select new DSMonthlyExpensesItem
-                 {
-                     ItemName = c2.Name,
-                     Desc = a.Description ?? "",
-                     Amount = a.Amount,
-                 }).ToListAsync();
-
-            var res = await responses;
-            return res.OrderByDescending(x => x.Amount);
         }
 
         #endregion

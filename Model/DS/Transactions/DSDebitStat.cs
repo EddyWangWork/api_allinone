@@ -46,6 +46,8 @@ namespace demoAPI.Model.DS
 
     public class DSMonthlyExpensesItem
     {
+        public int ItemID { get; set; }
+        public int ItemSubID { get; set; }
         public string ItemName { get; set; }
         public string Desc { get; set; }
         public decimal Amount { get; set; }
@@ -58,26 +60,27 @@ namespace demoAPI.Model.DS
         public decimal Credit { get; set; }
         public decimal Debit { get; set; }
         public decimal Remain { get; set; }
-        public string Usage { get; set; }        
+        public string Usage { get; set; }
         public string CreditCompare { get; set; }
         public string DebitCompare { get; set; }
         public string UsageCompare { get; set; }
     }
 
     public class DSMonthlyItemExpenses
-    {      
+    {
         public DateTime YearMonthDatetime { get; set; }
-        public List<DSMonthlyItem> DSMonthlyItems { get; set; }        
-        public List<DSMonthlyItem> DSMonthlySubItems { get; set; }        
+        public List<DSMonthlyItem> DSMonthlyItems { get; set; }
+        public List<DSMonthlyItem> DSMonthlySubItems { get; set; }
     }
 
     public class DSMonthlyItem
     {
-        public string ItemName { get; set; }        
-        public decimal Amount { get; set; }                
+        public string ItemName { get; set; }
+        public decimal Amount { get; set; }
         public decimal AmountLast { get; set; }
         public decimal Diff { get; set; }
         public decimal DiffPercentageNumber { get; set; }
         public string AmountComparePercentage { get; set; }
+        public List<DSMonthlyExpensesItem> ItemsDetail { get; set; }
     }
 }
