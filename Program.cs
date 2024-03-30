@@ -9,6 +9,7 @@ using demoAPI.BLL.Trips;
 using demoAPI.Common.Helper;
 using demoAPI.Data.DS;
 using demoAPI.Middleware;
+using demoAPI.Model;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -107,6 +108,8 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
+    GlobalVars.DSTransactions = new System.Collections.Concurrent.ConcurrentDictionary<int, List<demoAPI.Model.DS.DSTransactionDtoV2>>();
+
     var services = scope.ServiceProvider;
     try
     {

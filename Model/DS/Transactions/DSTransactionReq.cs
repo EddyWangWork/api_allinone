@@ -20,4 +20,15 @@ namespace demoAPI.Model.DS
         public DateTime DateFrom { get; set; }
         public DateTime DateTo { get; set; }
     }
+
+    public class GetDSMonthlyPeriodCreditDebitReq
+    {
+        public int Year { get; set; }
+        public int Month { get; set; }
+        public int MonthDuration { get; set; }
+        public bool IsIncludeCredit { get; set; }
+        public List<int> CreditIds { get; set; }
+        public bool IsIncludeDebit { get; set; }
+        public List<int> DebitIds { get; set; }
+    }
 }

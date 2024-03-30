@@ -8,6 +8,8 @@ namespace demoAPI.BLL.DS
 
         Task<IEnumerable<DSMonthlyItemExpenses>> GetDSMonthlyItemExpensesAsync(int year, int month, int monthDuration);
         Task<IEnumerable<DSMonthlyPeriodCreditDebit>> GetDSMonthlyPeriodCreditDebitAsync(int year, int month, int monthDuration);
+        Task<IEnumerable<DSMonthlyPeriodCreditDebit>> GetDSMonthlyPeriodCreditDebitAsyncV2(int year, int month, int monthDuration,
+            bool isIncludeCredit, List<int> creditIds, bool isIncludeDebit, List<int> debitIds);
         Task<DSMonthlyExpenses> GetDSMonthlyCommitmentAndOtherAsync(int year, int month, string name);
         Task<IEnumerable<DSMonthlyExpensesItem>> GetDSMonthlyExpensesAsync(int year, int month, string name, bool isExclude = false);
 

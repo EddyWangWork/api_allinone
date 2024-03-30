@@ -33,10 +33,11 @@ namespace demoAPI.Controllers
             return Ok(await _dsBLL.GetDSMonthlyItemExpensesAsync(year, month, monthDuration));
         }
 
-        [HttpGet("getDSMonthlyPeriodCreditDebit")]
-        public async Task<IActionResult> GetDSMonthlyPeriodCreditDebitAsync(int year, int month, int monthDuration)
+        [HttpPost("getDSMonthlyPeriodCreditDebit")]
+        public async Task<IActionResult> GetDSMonthlyPeriodCreditDebitAsync(GetDSMonthlyPeriodCreditDebitReq req)
         {
-            return Ok(await _dsBLL.GetDSMonthlyPeriodCreditDebitAsync(year, month, monthDuration));
+            return Ok(await _dsBLL.GetDSMonthlyPeriodCreditDebitAsyncV2(req.Year, req.Month, req.MonthDuration,
+                req.IsIncludeCredit, req.CreditIds, req.IsIncludeDebit, req.DebitIds));            
         }
 
         [HttpGet("getDSMonthlyCommitmentAndOther")]
