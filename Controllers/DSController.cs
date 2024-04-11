@@ -36,14 +36,14 @@ namespace demoAPI.Controllers
         [HttpPost("getDSMonthlyPeriodCreditDebit")]
         public async Task<IActionResult> GetDSMonthlyPeriodCreditDebitAsync(GetDSMonthlyPeriodCreditDebitReq req)
         {
-            return Ok(await _dsBLL.GetDSMonthlyPeriodCreditDebitAsyncV2(req.Year, req.Month, req.MonthDuration,
+            return Ok(await _dsBLL.GetDSMonthlyPeriodCreditDebitAsync(req.Year, req.Month, req.MonthDuration,
                 req.IsIncludeCredit, req.CreditIds, req.IsIncludeDebit, req.DebitIds));            
         }
 
-        [HttpGet("getDSMonthlyCommitmentAndOther")]
-        public async Task<IActionResult> GetDSMonthlyCommitmentAndOtherAsync(int year, int month, string name)
+        [HttpPost("getDSMonthlyCommitmentAndOther")]
+        public async Task<IActionResult> GetDSMonthlyCommitmentAndOtherAsync(GetDSMonthlyCommitmentAndOtherReq req)
         {
-            return Ok(await _dsBLL.GetDSMonthlyCommitmentAndOtherAsync(year, month, name));
+            return Ok(await _dsBLL.GetDSMonthlyCommitmentAndOtherAsync(req.Year, req.Month, req.DebitIds));
         }
 
         [HttpGet("getDSMonthlyExpensesByItem")]
@@ -106,7 +106,7 @@ namespace demoAPI.Controllers
         [HttpGet("getDSTransactionV2")]
         public async Task<IActionResult> GetDSTransactionAsyncV2()
         {
-            return Ok(await _dsBLL.GetDSTransactionAsyncV2());
+            return Ok(await _dsBLL.GetDSTransactionAsyncV3());
         }
 
         [HttpPost("getDSTransactionWithDate")]

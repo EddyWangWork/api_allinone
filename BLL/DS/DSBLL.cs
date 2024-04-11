@@ -17,6 +17,7 @@ namespace demoAPI.BLL.DS
         private readonly List<int> _transferTypes = new() { 3, 4 };
         private readonly List<int> _creditDebitTypes = new() { 1, 2 };
         private readonly List<int> _creditItems = new() { 19 };
+        private readonly List<int> _debitItems = new() { 1 }; //commitment:1
 
         public DSBLL(DSContext context, IMapper mapper)
         {
@@ -31,45 +32,20 @@ namespace demoAPI.BLL.DS
             var dateCurrent = new DateTime(year, month, 1).AddMonths(1);
             var datePrev = dateCurrent.AddMonths(-monthDuration);
 
-            var responses = (
-                 from a in _context.DSTransactions
-                 join b in _context.DSItems on a.DSItemID equals b.ID into bb
-                 from b2 in bb.DefaultIfEmpty()
-                 join c in _context.DSItemSubs on a.DSItemSubID equals c.ID into cc
-                 from c2 in cc.DefaultIfEmpty()
-                 join d in _context.DSItems on c2.DSItemID equals d.ID into dd
-                 from d2 in dd.DefaultIfEmpty()
-                 where
-                    a.DSTypeID == 2 &&
-                    (a.CreatedDateTime >= datePrev && a.CreatedDateTime < dateCurrent)
-                 select new
-                 {
-                     b2,
-                     c2,
-                     d2,
-                     FinalName = b2 != null ? b2.Name : d2.Name,
-                     FinalSubName = b2 != null ? b2.Name : $"{d2.Name}|{c2.Name}",
-                     FinalSubNameOnly = b2 != null ? b2.Name : c2.Name,
-                     a.Description,
-                     a.DSTypeID,
-                     a.Amount,
-                     a.CreatedDateTime,
-                     CreatedDateTimeYearMonth = new DateTime(a.CreatedDateTime.Year, a.CreatedDateTime.Month, 1)
-                 }).ToListAsync();
+            var transactionAll = await GetSetDSTransactionAllAsync();
+            transactionAll = transactionAll.Where(x => x.DSTypeID == 2 && x.CreatedDateTime >= datePrev && x.CreatedDateTime < dateCurrent);
 
-            var res = await responses;
-
-            var distinctDatetime = res.GroupBy(x => x.CreatedDateTimeYearMonth).Select(x => x.First().CreatedDateTimeYearMonth).OrderByDescending(x => x).ToList();
-            var resGroupbyName = res.GroupBy(x => new { x.CreatedDateTimeYearMonth, x.FinalName }).Select(y => new
+            var distinctDatetime = transactionAll.GroupBy(x => x.CreatedDateTimeYearMonth).Select(x => x.First().CreatedDateTimeYearMonth).OrderByDescending(x => x).ToList();
+            var resGroupbyName = transactionAll.GroupBy(x => new { x.CreatedDateTimeYearMonth, x.DSItemNameMain }).Select(y => new
             {
                 y.FirstOrDefault().CreatedDateTimeYearMonth,
-                y.FirstOrDefault().FinalName,
+                y.FirstOrDefault().DSItemNameMain,
                 Amount = y.Sum(x => x.Amount)
             }).ToList();
-            var resGroupbySubName = res.GroupBy(x => new { x.CreatedDateTimeYearMonth, x.FinalSubName }).Select(y => new
+            var resGroupbySubName = transactionAll.GroupBy(x => new { x.CreatedDateTimeYearMonth, x.DSItemName }).Select(y => new
             {
                 y.FirstOrDefault().CreatedDateTimeYearMonth,
-                y.FirstOrDefault().FinalSubName,
+                y.FirstOrDefault().DSItemName,
                 Amount = y.Sum(x => x.Amount)
             }).ToList();
 
@@ -81,15 +57,15 @@ namespace demoAPI.BLL.DS
                 var monthlyItems = new List<DSMonthlyItem>();
                 var monthlySubItems = new List<DSMonthlyItem>();
 
-                var allitems = resGroupbyName.Where(x => x.CreatedDateTimeYearMonth == distinctDatetime[i]).Select(x => x.FinalName).
-                        Union(resGroupbyName.Where(x => x.CreatedDateTimeYearMonth == distinctDatetime[i + 1]).Select(x => x.FinalName)).OrderBy(x => x).ToList();
-                var allsubitems = resGroupbySubName.Where(x => x.CreatedDateTimeYearMonth == distinctDatetime[i]).Select(x => x.FinalSubName).
-                        Union(resGroupbySubName.Where(x => x.CreatedDateTimeYearMonth == distinctDatetime[i + 1]).Select(x => x.FinalSubName)).OrderBy(x => x).ToList();
+                var allitems = resGroupbyName.Where(x => x.CreatedDateTimeYearMonth == distinctDatetime[i]).Select(x => x.DSItemNameMain).
+                        Union(resGroupbyName.Where(x => x.CreatedDateTimeYearMonth == distinctDatetime[i + 1]).Select(x => x.DSItemNameMain)).OrderBy(x => x).ToList();
+                var allsubitems = resGroupbySubName.Where(x => x.CreatedDateTimeYearMonth == distinctDatetime[i]).Select(x => x.DSItemName).
+                        Union(resGroupbySubName.Where(x => x.CreatedDateTimeYearMonth == distinctDatetime[i + 1]).Select(x => x.DSItemName)).OrderBy(x => x).ToList();
 
                 allitems.ForEach(x =>
                 {
-                    var amountCurrent = resGroupbyName.FirstOrDefault(y => y.CreatedDateTimeYearMonth == distinctDatetime[i] && y.FinalName == x)?.Amount ?? 0;
-                    var amountLast = resGroupbyName.FirstOrDefault(y => y.CreatedDateTimeYearMonth == distinctDatetime[i + 1] && y.FinalName == x)?.Amount ?? 0;
+                    var amountCurrent = resGroupbyName.FirstOrDefault(y => y.CreatedDateTimeYearMonth == distinctDatetime[i] && y.DSItemNameMain == x)?.Amount ?? 0;
+                    var amountLast = resGroupbyName.FirstOrDefault(y => y.CreatedDateTimeYearMonth == distinctDatetime[i + 1] && y.DSItemNameMain == x)?.Amount ?? 0;
                     var amountDiff = amountCurrent - amountLast;
                     var diffPercentageNumber = (amountCurrent == 0 || amountLast == 0) ?
                         amountCurrent == 0 ?
@@ -113,8 +89,8 @@ namespace demoAPI.BLL.DS
 
                 allsubitems.ForEach(x =>
                 {
-                    var amountCurrent = resGroupbySubName.FirstOrDefault(y => y.CreatedDateTimeYearMonth == distinctDatetime[i] && y.FinalSubName == x)?.Amount ?? 0;
-                    var amountLast = resGroupbySubName.FirstOrDefault(y => y.CreatedDateTimeYearMonth == distinctDatetime[i + 1] && y.FinalSubName == x)?.Amount ?? 0;
+                    var amountCurrent = resGroupbySubName.FirstOrDefault(y => y.CreatedDateTimeYearMonth == distinctDatetime[i] && y.DSItemName == x)?.Amount ?? 0;
+                    var amountLast = resGroupbySubName.FirstOrDefault(y => y.CreatedDateTimeYearMonth == distinctDatetime[i + 1] && y.DSItemName == x)?.Amount ?? 0;
                     var amountDiff = amountCurrent - amountLast;
                     var diffPercentageNumber = (amountCurrent == 0 || amountLast == 0) ?
                         amountCurrent == 0 ?
@@ -140,11 +116,11 @@ namespace demoAPI.BLL.DS
                 {
                     var monthlyExpensesItems = new List<DSMonthlyExpensesItem>();
 
-                    res.Where(y => y.FinalName == x.ItemName && y.CreatedDateTimeYearMonth == monthlyDatetime).ToList().ForEach(yy =>
+                    transactionAll.Where(y => y.DSItemNameMain == x.ItemName && y.CreatedDateTimeYearMonth == monthlyDatetime).ToList().ForEach(yy =>
                     {
                         monthlyExpensesItems.Add(new DSMonthlyExpensesItem
                         {
-                            ItemName = yy.FinalSubNameOnly,
+                            ItemName = yy.DSItemNameSub,
                             Desc = yy.Description,
                             Amount = yy.Amount
                         });
@@ -162,38 +138,18 @@ namespace demoAPI.BLL.DS
             }
 
             return finalRes;
-        }
+        }        
 
-        public async Task<IEnumerable<DSMonthlyPeriodCreditDebit>> GetDSMonthlyPeriodCreditDebitAsyncV2(int year, int month, int monthDuration,
+        public async Task<IEnumerable<DSMonthlyPeriodCreditDebit>> GetDSMonthlyPeriodCreditDebitAsync(int year, int month, int monthDuration,
             bool isIncludeCredit, List<int> creditIds, bool isIncludeDebit, List<int> debitIds)
         {
             var dateCurrent = new DateTime(year, month, 1).AddMonths(1);
             var datePrev = dateCurrent.AddMonths(-monthDuration);
 
-            var responses = (
-                 from a in _context.DSTransactions
-                 join b in _context.DSItems on a.DSItemID equals b.ID into bb
-                 from b2 in bb.DefaultIfEmpty()
-                 join c in _context.DSItemSubs on a.DSItemSubID equals c.ID into cc
-                 from c2 in cc.DefaultIfEmpty()
-                 join d in _context.DSItems on c2.DSItemID equals d.ID into dd
-                 from d2 in dd.DefaultIfEmpty()
-                 where
-                    _creditDebitTypes.Contains(a.DSTypeID) &&
-                    (a.CreatedDateTime >= datePrev && a.CreatedDateTime < dateCurrent)
-                 select new
-                 {
-                     b2,
-                     ItemID = b2 != null ? b2.ID : c2.DSItemID,
-                     ItemSubID = d2 != null ? c2.ID : 0,
-                     a.DSTypeID,
-                     a.Amount,
-                     a.CreatedDateTime
-                 }).ToListAsync();
+            var transactionAll = await GetSetDSTransactionAllAsync();
+            transactionAll = transactionAll.Where(x => _creditDebitTypes.Contains(x.DSTypeID) && x.CreatedDateTime >= datePrev && x.CreatedDateTime < dateCurrent);
 
-            var res = await responses;
-
-            var resGroupby = res.GroupBy(x => new { x.CreatedDateTime.Year, x.CreatedDateTime.Month }).ToList();
+            var resGroupby = transactionAll.GroupBy(x => new { x.CreatedDateTime.Year, x.CreatedDateTime.Month }).ToList();
             List<DSMonthlyPeriodCreditDebit> monthlyPeriodCreditDebit = new List<DSMonthlyPeriodCreditDebit>();
 
             resGroupby.ForEach(x =>
@@ -202,11 +158,11 @@ namespace demoAPI.BLL.DS
                 var yearMonth = $"{x.Key.Year}-{x.Key.Month}";
 
                 var credit = creditIds.Count > 0 ?
-                x.Where(x => x.DSTypeID == 1 && (isIncludeCredit ? creditIds.Contains(x.ItemID) : !creditIds.Contains(x.ItemID))).Sum(x => x.Amount) :
+                x.Where(x => x.DSTypeID == 1 && (isIncludeCredit ? creditIds.Contains(x.DSItemID) : !creditIds.Contains(x.DSItemID))).Sum(x => x.Amount) :
                 x.Where(x => x.DSTypeID == 1).Sum(x => x.Amount);
 
                 var debit = debitIds.Count > 0 ?
-                x.Where(x => x.DSTypeID == 2 && (isIncludeDebit ? debitIds.Contains(x.ItemID) : !debitIds.Contains(x.ItemID))).Sum(x => x.Amount) :
+                x.Where(x => x.DSTypeID == 2 && (isIncludeDebit ? debitIds.Contains(x.DSItemID) : !debitIds.Contains(x.DSItemID))).Sum(x => x.Amount) :
                 x.Where(x => x.DSTypeID == 2).Sum(x => x.Amount);
 
                 var remain = credit - debit;
@@ -224,7 +180,7 @@ namespace demoAPI.BLL.DS
             });
 
             monthlyPeriodCreditDebit = monthlyPeriodCreditDebit.OrderByDescending(x => x.YearMonthDatetime).ToList();
-            
+
             for (int i = 0; i <= monthlyPeriodCreditDebit.Count - 2; i++)
             {
                 var creditCompare = (monthlyPeriodCreditDebit[i].Credit <= 0 || monthlyPeriodCreditDebit[i + 1].Credit <= 0) ? 100.ToString("0.00") : (((monthlyPeriodCreditDebit[i].Credit / monthlyPeriodCreditDebit[i + 1].Credit) - 1) * 100).ToString("0.00");
@@ -235,65 +191,39 @@ namespace demoAPI.BLL.DS
             }
 
             return monthlyPeriodCreditDebit;
-        }
+        }        
 
-        public async Task<IEnumerable<DSMonthlyPeriodCreditDebit>> GetDSMonthlyPeriodCreditDebitAsync(int year, int month, int monthDuration)
+        public async Task<DSMonthlyExpenses> GetDSMonthlyCommitmentAndOtherAsync(int year, int month, List<int> debitIds)
         {
-            var dateCurrent = new DateTime(year, month, 1).AddMonths(1);
-            var datePrev = dateCurrent.AddMonths(-monthDuration);
+            debitIds = debitIds.Count > 0 ? debitIds : _debitItems;
+            var transactionAll = await GetSetDSTransactionAllAsync();
 
-            var responses = (
-                 from a in _context.DSTransactions
-                 join b in _context.DSItems on a.DSItemID equals b.ID into bb
-                 from b2 in bb.DefaultIfEmpty()
-                 join c in _context.DSItemSubs on a.DSItemSubID equals c.ID into cc
-                 from c2 in cc.DefaultIfEmpty()
-                 join d in _context.DSItems on c2.DSItemID equals d.ID into dd
-                 from d2 in dd.DefaultIfEmpty()
-                 where
-                    _creditDebitTypes.Contains(a.DSTypeID) &&
-                    (a.CreatedDateTime >= datePrev && a.CreatedDateTime < dateCurrent)
-                 select new
-                 {
-                     b2,
-                     a.DSTypeID,
-                     a.Amount,
-                     a.CreatedDateTime
-                 }).ToListAsync();
+            var commitments =
+                transactionAll.
+                    Where(x => x.DSTypeID == 2 && debitIds.Contains(x.DSItemID) && x.CreatedDateTime.Year == year && x.CreatedDateTime.Month == month).
+                    Select(xx => new DSMonthlyExpensesItem
+                    {
+                        ItemName = xx.DSItemNameSub,
+                        Desc = xx.Description,
+                        Amount = xx.Amount
+                    }).OrderByDescending(x => x.Amount).ToList();
 
-            var res = await responses;
+            var others =
+                transactionAll.
+                    Where(x => x.DSTypeID == 2 && !debitIds.Contains(x.DSItemID) && x.CreatedDateTime.Year == year && x.CreatedDateTime.Month == month).
+                    GroupBy(xx => xx.DSItemNameMain).
+                    Select(xxx => new DSMonthlyExpensesItem
+                    {
+                        ItemName = xxx.Key,
+                        Amount = xxx.Sum(x => x.Amount)
+                    }).OrderByDescending(x => x.Amount).ToList();
 
-            var resGroupby = res.GroupBy(x => new { x.CreatedDateTime.Year, x.CreatedDateTime.Month }).Select(y => new DSMonthlyPeriodCreditDebit
-            {
-                YearMonthDatetime = new DateTime(y.Key.Year, y.Key.Month, 1),
-                YearMonth = $"{y.Key.Year}-{y.Key.Month}",
-                Credit = y.Where(x => x.DSTypeID == 1 && x.b2?.ID == 19).Sum(x => x.Amount),
-                Debit = y.Where(x => x.DSTypeID == 2).Sum(x => x.Amount),
-                Remain = y.Where(x => x.DSTypeID == 1 && x.b2?.ID == 19).Sum(x => x.Amount) - y.Where(x => x.DSTypeID == 2).Sum(x => x.Amount),
-                Usage = ((y.Where(x => x.DSTypeID == 2).Sum(x => x.Amount) / y.Where(x => x.DSTypeID == 1 && x.b2?.ID == 19).Select(x => x.Amount).DefaultIfEmpty(1).Sum()) * 100).ToString("0")
-            }).OrderByDescending(x => x.YearMonthDatetime).ToList();
-
-            for (int i = 0; i <= resGroupby.Count() - 2; i++)
-            {
-                var creditCompare = (resGroupby[i].Credit <= 0 || resGroupby[i + 1].Credit <= 0) ? 100.ToString("0.00") : (((resGroupby[i].Credit / resGroupby[i + 1].Credit) - 1) * 100).ToString("0.00");
-
-                resGroupby[i].CreditCompare = creditCompare;
-                resGroupby[i].DebitCompare = (((resGroupby[i].Debit / resGroupby[i + 1].Debit) - 1) * 100).ToString("0.00");
-                resGroupby[i].UsageCompare = (Convert.ToInt32(resGroupby[i].Usage) - Convert.ToInt32(resGroupby[i + 1].Usage)).ToString("0");
-            }
-
-            return resGroupby;
-        }
-
-        public async Task<DSMonthlyExpenses> GetDSMonthlyCommitmentAndOtherAsync(int year, int month, string name) //GetDSThirdMonthlyCreditDebitAsync
-        {
-            var commitment = await GetDSMonthlyExpensesAsync(year, month, name, false);
-            var other = await GetDSMonthlyExpensesAsync(year, month, name, true);
+            var commitment = commitments;
 
             return new DSMonthlyExpenses()
             {
-                Items = commitment.ToList(),
-                ItemsOther = other.ToList()
+                Items = commitments,
+                ItemsOther = others
             };
         }
 
@@ -487,6 +417,7 @@ namespace demoAPI.BLL.DS
                      DSItemID = a.DSItemID,
                      DSItemSubID = a.DSItemSubID,
                      Description = a.Description,
+                     CreatedDateTime = a.CreatedDateTime,
                      Amount = a.Amount,
                  }).ToListAsync();
 
@@ -501,6 +432,59 @@ namespace demoAPI.BLL.DS
             }
 
             return res2;
+        }
+
+        public async Task<IEnumerable<DSTransactionDtoV2>> GetDSTransactionAsyncV3(DateTime? dateFrom = null, DateTime? dateTo = null)
+        {
+            var transactionAll = await GetSetDSTransactionAllAsync();
+
+            var finalRes = new List<DSTransactionDtoV2>();
+
+            var dsaccountids = transactionAll.DistinctBy(x => x.DSAccountID).Select(x => x.DSAccountID);
+            List<int> expensesList =
+                new List<int> { (int)EnumDSTranType.Expense, (int)EnumDSTranType.TransferOut, (int)EnumDSTranType.DebitTransferOut };
+            int rowID = 0;
+
+            foreach (var dsaccountid in dsaccountids)
+            {
+                decimal balance = 0;
+                var dsTransactionsByAcc = transactionAll.Where(x => x.DSAccountID == dsaccountid).OrderBy(x => x.CreatedDateTime);
+
+                foreach (var dsTransactionByAcc in dsTransactionsByAcc)
+                {
+                    var dsTransferOutTran = new DSTransactionDto();
+                    if (dsTransactionByAcc.DSTypeID == 3)
+                    {
+                        dsTransferOutTran = transactionAll.FirstOrDefault(x => x.DSTransferOutID == dsTransactionByAcc.ID);
+                    }
+
+                    balance = expensesList.Contains(dsTransactionByAcc.DSTypeID) ? balance - dsTransactionByAcc.Amount : balance + dsTransactionByAcc.Amount;
+                    finalRes.Add(new DSTransactionDtoV2
+                    {
+                        RowID = rowID++,
+                        DSTypeName = dsTransactionByAcc.DSTypeName,
+                        DSAccountName = dsTransactionByAcc.DSAccountName,
+                        DSItemName = dsTransactionByAcc.DSTypeID == 3 ?
+                            dsTransferOutTran.DSAccountName :
+                            dsTransactionByAcc.DSItemName,
+                        ID = dsTransactionByAcc.ID,
+                        DSTypeID = dsTransactionByAcc.DSTypeID,
+                        DSAccountID = dsTransactionByAcc.DSAccountID,
+                        DSAccountToID = dsTransactionByAcc.DSTypeID == 3 ? dsTransferOutTran.DSAccountID : 0,
+                        DSTransferOutID = dsTransactionByAcc.DSTransferOutID,
+                        Description = dsTransactionByAcc.Description,
+                        CreatedDateTime = dsTransactionByAcc.CreatedDateTime,
+                        Amount = dsTransactionByAcc.Amount,
+                        Balance = balance
+                    }); ;
+                }
+            }
+            var finalResOrdered = finalRes.OrderByDescending(x => x.CreatedDateTime).ThenByDescending(x => x.RowID);
+            if (dateFrom == null || dateTo == null)
+            {
+                return finalResOrdered;
+            }
+            return finalResOrdered.Where(x => x.CreatedDateTime >= dateFrom && x.CreatedDateTime <= dateTo);
         }
 
         public async Task<IEnumerable<DSTransactionDtoV2>> GetDSTransactionAsyncV2(DateTime? dateFrom = null, DateTime? dateTo = null)
@@ -719,6 +703,54 @@ namespace demoAPI.BLL.DS
         {
             GlobalVars.DSTransactions.AddOrUpdate(MemberId, new List<DSTransactionDtoV2>());
             await GetDSTransactionAsyncV2(null, null);
+        }
+
+        private async Task<IEnumerable<DSTransactionDto>> GetSetDSTransactionAllAsync()
+        {
+            if (GlobalVars.DSTransactionsAll.ContainsKey(MemberId) && GlobalVars.DSTransactionsAll[MemberId].Count > 0)
+            {
+                return GlobalVars.DSTransactionsAll[MemberId];
+            }
+
+            var finalRes = new List<DSTransactionDto>();
+
+            var responses = (
+                 from a in _context.DSTransactions
+                 join b in _context.DSAccounts on a.DSAccountID equals b.ID
+                 join c in _context.DSTypes on a.DSTypeID equals c.ID
+                 join d in _context.DSItems on a.DSItemID equals d.ID into dd
+                 from d2 in dd.DefaultIfEmpty()
+                 join e in _context.DSItemSubs on a.DSItemSubID equals e.ID into ee
+                 from e2 in ee.DefaultIfEmpty()
+                 join f in _context.DSItems on e2.DSItemID equals f.ID into ff
+                 from f2 in ff.DefaultIfEmpty()
+                 join g in _context.DSTransactions on a.DSTransferOutID equals g.ID into gg
+                 from g2 in gg.DefaultIfEmpty()
+                 join h in _context.DSAccounts on g2.DSAccountID equals h.ID into hh
+                 from h2 in hh.DefaultIfEmpty()
+                 where a.MemberID == MemberId
+                 select new DSTransactionDto
+                 {
+                     DSTypeName = c.Name,
+                     DSAccountName = b.Name,
+                     CreatedDateTime = a.CreatedDateTime,
+                     CreatedDateTimeYearMonth = new DateTime(a.CreatedDateTime.Year, a.CreatedDateTime.Month, 1),
+                     DSItemName = c.ID == 4 ? h2.Name : d2.ID > 0 ? d2.Name : $"{f2.Name}|{e2.Name}",
+                     DSItemNameMain = d2 != null ? d2.Name : f2.Name,
+                     DSItemNameSub = d2 != null ? d2.Name : e2.Name,
+                     ID = a.ID,
+                     DSTypeID = a.DSTypeID,
+                     DSAccountID = a.DSAccountID,
+                     DSTransferOutID = a.DSTransferOutID,
+                     DSItemID = _transferTypes.Contains(c.ID) ? 0 : a.DSItemID > 0 ? a.DSItemID : e2 != null ? e2.DSItemID : 999,
+                     DSItemSubID = a.DSItemSubID,
+                     Description = a.Description,
+                     Amount = a.Amount,
+                 }).ToListAsync();
+
+            var dsTransactions = await responses;
+            GlobalVars.DSTransactionsAll.AddOrUpdate(MemberId, dsTransactions);
+            return dsTransactions;
         }
     }
 }

@@ -31,4 +31,11 @@ namespace demoAPI.Model.DS
         public bool IsIncludeDebit { get; set; }
         public List<int> DebitIds { get; set; }
     }
+
+    public class GetDSMonthlyCommitmentAndOtherReq
+    {
+        public int Year { get; set; }
+        public int Month { get; set; }
+        public List<int> DebitIds { get; set; }
+    }
 }

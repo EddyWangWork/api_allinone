@@ -5,8 +5,11 @@ namespace demoAPI.Model.DS
     public class DSTransactionDto : DSTransaction
     {
         public string DSTypeName { get; set; }
-        public string DSAccountName { get; set; }
+        public string DSAccountName { get; set; }        
         public string DSItemName { get; set; }
+        public string DSItemNameMain { get; set; }
+        public string DSItemNameSub { get; set; }
+        public DateTime CreatedDateTimeYearMonth { get; set; }
     }
 
     public class DSTransactionDtoV2

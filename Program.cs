@@ -109,6 +109,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     GlobalVars.DSTransactions = new System.Collections.Concurrent.ConcurrentDictionary<int, List<demoAPI.Model.DS.DSTransactionDtoV2>>();
+    GlobalVars.DSTransactionsAll = new System.Collections.Concurrent.ConcurrentDictionary<int, List<demoAPI.Model.DS.DSTransactionDto>>();
 
     var services = scope.ServiceProvider;
     try
