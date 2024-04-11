@@ -112,7 +112,7 @@ namespace demoAPI.Controllers
         [HttpPost("getDSTransactionWithDate")]
         public async Task<IActionResult> GetDSTransactionWithDateAsync(DSTransactionWithDateReq req)
         {
-            return Ok(await _dsBLL.GetDSTransactionAsyncV2(req.DateFrom, req.DateTo));
+            return Ok(await _dsBLL.GetDSTransactionAsyncV3(req.DateFrom, req.DateTo));
         }
 
         [HttpPost]
