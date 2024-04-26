@@ -15,6 +15,13 @@ namespace demoAPI.Model.DS
         public DateTime CreatedDateTime { get; set; }
     }
 
+    public class GetDSTransactionAsyncV2Req
+    {
+        public DateTime? DateFrom { get; set; }
+        public DateTime? DateTo { get; set; }
+        public int DataLimit { get; set; }
+    }
+
     public class DSTransactionWithDateReq
     {
         public DateTime DateFrom { get; set; }

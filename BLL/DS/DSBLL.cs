@@ -138,7 +138,7 @@ namespace demoAPI.BLL.DS
             }
 
             return finalRes;
-        }        
+        }
 
         public async Task<IEnumerable<DSMonthlyPeriodCreditDebit>> GetDSMonthlyPeriodCreditDebitAsync(int year, int month, int monthDuration,
             bool isIncludeCredit, List<int> creditIds, bool isIncludeDebit, List<int> debitIds)
@@ -191,7 +191,7 @@ namespace demoAPI.BLL.DS
             }
 
             return monthlyPeriodCreditDebit;
-        }        
+        }
 
         public async Task<DSMonthlyExpenses> GetDSMonthlyCommitmentAndOtherAsync(int year, int month, List<int> debitIds)
         {
@@ -434,7 +434,7 @@ namespace demoAPI.BLL.DS
             return res2;
         }
 
-        public async Task<IEnumerable<DSTransactionDtoV2>> GetDSTransactionAsyncV3(DateTime? dateFrom = null, DateTime? dateTo = null)
+        public async Task<IEnumerable<DSTransactionDtoV2>> GetDSTransactionAsyncV3(DateTime? dateFrom = null, DateTime? dateTo = null, int DataLimit = 0)
         {
             var transactionAll = await GetSetDSTransactionAllAsync();
 
@@ -482,9 +482,15 @@ namespace demoAPI.BLL.DS
             var finalResOrdered = finalRes.OrderByDescending(x => x.CreatedDateTime).ThenByDescending(x => x.RowID);
             if (dateFrom == null || dateTo == null)
             {
-                return finalResOrdered;
+                if (DataLimit == 0)
+                    return finalResOrdered;
+                return finalResOrdered.Take(DataLimit);
             }
-            return finalResOrdered.Where(x => x.CreatedDateTime >= dateFrom && x.CreatedDateTime <= dateTo);
+            var finalResWithDateOrdered = finalResOrdered.Where(x => x.CreatedDateTime >= dateFrom && x.CreatedDateTime <= dateTo);
+
+            if (DataLimit == 0)
+                return finalResWithDateOrdered;
+            return finalResWithDateOrdered.Take(DataLimit);
         }
 
         public async Task<DSTransactionDto> Add(DSTransactionReq req)
@@ -608,7 +614,7 @@ namespace demoAPI.BLL.DS
         }
 
         private async Task SetGlobalDSTransactions()
-        {            
+        {
             GlobalVars.DSTransactionsAll.AddOrUpdate(MemberId, new List<DSTransactionDto>());
             await GetSetDSTransactionAllAsync();
         }

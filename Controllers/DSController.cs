@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using demoAPI.BLL.DS;
 using demoAPI.Data.DS;
+using demoAPI.Middleware;
 using demoAPI.Model.DS;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace demoAPI.Controllers
 {
     [ApiController]
+    [ResponseCompressionAttribute]
     [Route("[controller]")]
     public class DSController : ControllerBase
     {
@@ -102,11 +104,11 @@ namespace demoAPI.Controllers
         {
             return Ok(await _dsBLL.GetDSTransactionAsync());
         }
-
-        [HttpGet("getDSTransactionV2")]
-        public async Task<IActionResult> GetDSTransactionAsyncV2()
+        
+        [HttpPost("getDSTransactionV2")]
+        public async Task<IActionResult> GetDSTransactionAsyncV2(GetDSTransactionAsyncV2Req req)
         {
-            return Ok(await _dsBLL.GetDSTransactionAsyncV3());
+            return Ok(await _dsBLL.GetDSTransactionAsyncV3(req.DateFrom, req.DateTo, req.DataLimit));
         }
 
         [HttpPost("getDSTransactionWithDate")]
