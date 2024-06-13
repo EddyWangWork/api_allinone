@@ -3,6 +3,7 @@ using demoAPI.BLL.DSItems;
 using demoAPI.BLL.Member;
 using demoAPI.Common.Helper;
 using demoAPI.Data.DS;
+using demoAPI.Middleware;
 using demoAPI.Model;
 using demoAPI.Model.DS;
 using Microsoft.AspNetCore.Authorization;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace demoAPI.Controllers
 {
     [ApiController]
+    [ResponseCompressionAttribute]
     [Route("[controller]")]
     public class DSItemController : ControllerBase
     {

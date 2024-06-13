@@ -3,6 +3,7 @@ using demoAPI.BLL.Member;
 using demoAPI.BLL.Todolist;
 using demoAPI.Common.Helper;
 using demoAPI.Data.DS;
+using demoAPI.Middleware;
 using demoAPI.Model.TodlistsDone;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace demoAPI.Controllers
 {
     [ApiController]
+    [ResponseCompressionAttribute]
     [Route("[controller]")]
     public class TodolistDoneController : ControllerBase
     {

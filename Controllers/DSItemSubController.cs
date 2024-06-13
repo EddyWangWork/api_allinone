@@ -3,6 +3,7 @@ using demoAPI.BLL.DSItems;
 using demoAPI.BLL.Member;
 using demoAPI.Common.Helper;
 using demoAPI.Data.DS;
+using demoAPI.Middleware;
 using demoAPI.Model;
 using demoAPI.Model.DS;
 using Microsoft.AspNetCore.Authorization;
@@ -12,6 +13,7 @@ namespace demoAPI.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [ResponseCompressionAttribute]
     public class DSItemSubController : ControllerBase
     {
         private readonly IMapper _mapper;

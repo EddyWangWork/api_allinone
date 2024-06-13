@@ -58,21 +58,29 @@ namespace demoAPI.Middleware
 
         public override async void OnResultExecuted(ResultExecutedContext context)
         {
-            HttpResponse response = context.HttpContext.Response;
-
-            if ((response.HttpContext.Items["_originStream"] != null) && (response.HttpContext.Items["_ms"] != null))
+            try
             {
-                Stream _originStream = (Stream)response.HttpContext.Items["_originStream"];
-                MemoryStream _ms = (MemoryStream)response.HttpContext.Items["_ms"];
+                HttpResponse response = context.HttpContext.Response;
 
-                await response.Body.FlushAsync();
-                _ms.Seek(0, SeekOrigin.Begin);
-                response.Headers.ContentLength = _ms.Length;
-                await _ms.CopyToAsync(_originStream);
-                response.Body.Dispose();
-                _ms.Dispose();
-                response.Body = _originStream;
+                if ((response.HttpContext.Items["_originStream"] != null) && (response.HttpContext.Items["_ms"] != null))
+                {
+                    Stream _originStream = (Stream)response.HttpContext.Items["_originStream"];
+                    MemoryStream _ms = (MemoryStream)response.HttpContext.Items["_ms"];
+
+                    await response.Body.FlushAsync();
+                    _ms.Seek(0, SeekOrigin.Begin);
+                    response.Headers.ContentLength = _ms.Length;
+                    await _ms.CopyToAsync(_originStream);
+                    response.Body.Dispose();
+                    _ms.Dispose();
+                    response.Body = _originStream;
+                }
             }
+            catch (Exception ex)
+            {
+
+            }
+            
             base.OnResultExecuted(context);
         }
     }
