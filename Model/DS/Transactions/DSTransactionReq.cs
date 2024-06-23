@@ -20,6 +20,7 @@ namespace demoAPI.Model.DS
         public DateTime? DateFrom { get; set; }
         public DateTime? DateTo { get; set; }
         public int DataLimit { get; set; }
+        public int DSAccountID { get; set; }
     }
 
     public class DSTransactionWithDateReq

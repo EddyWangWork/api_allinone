@@ -1,0 +1,20 @@
+------------------------------------------------------------------------
+db - restore
+------------------------------------------------------------------------
+https://www.sqlshack.com/sql-server-transaction-log-backup-truncate-and-shrink-operations/
+
+
+------------------------------------------------------------------------
+BE - Compress
+------------------------------------------------------------------------
+https://stackoverflow.com/questions/50918729/compress-filter-at-the-action-level-for-asp-net-core-mvc
+
+
+------------------------------------------------------------------------
+BE - EF
+------------------------------------------------------------------------    
+Remove-Migration
+Update-Database <previous-migration-name>
+
+Add-Migration [MigrationName]
+Update-Database

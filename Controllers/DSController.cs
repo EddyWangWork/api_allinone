@@ -117,6 +117,12 @@ namespace demoAPI.Controllers
             return Ok(await _dsBLL.GetDSTransactionAsyncV3(req.DateFrom, req.DateTo));
         }
 
+        [HttpPost("getDSTransactionByDSAccount")]
+        public async Task<IActionResult> GetDSTransactionByDSAccountAsync(GetDSTransactionAsyncV2Req req)
+        {
+            return Ok(await _dsBLL.GetDSTransactionByDSAccountAsync(req.DSAccountID, req.DateFrom, req.DateTo, req.DataLimit));
+        }
+
         [HttpPost]
         public async Task<IActionResult> PostAsync(DSTransactionReq req)
         {

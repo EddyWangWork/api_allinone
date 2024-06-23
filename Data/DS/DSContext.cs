@@ -26,6 +26,9 @@ namespace demoAPI.Data.DS
         public DbSet<TripDetail> TripDetails { get; set; }
         public DbSet<Trip> Trips { get; set; }
         public DbSet<Kanban> Kanbans { get; set; }
+        public DbSet<Shop> Shops { get; set; }
+        public DbSet<ShopType> ShopTypes { get; set; }
+        public DbSet<ShopDiary> ShopDiaries { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -37,11 +40,13 @@ namespace demoAPI.Data.DS
             modelBuilder.Entity<Member>().ToTable("Member");
             modelBuilder.Entity<Todolist>().ToTable("Todolist");
             modelBuilder.Entity<TodolistDone>().ToTable("TodolistDone");
-
             modelBuilder.Entity<TripDetailType>().ToTable("TripDetailType");
             modelBuilder.Entity<TripDetail>().ToTable("TripDetail");
             modelBuilder.Entity<Trip>().ToTable("Trip");
             modelBuilder.Entity<Kanban>().ToTable("Kanban");
+            modelBuilder.Entity<Shop>().ToTable("Shop");
+            modelBuilder.Entity<ShopType>().ToTable("ShopType");
+            modelBuilder.Entity<ShopDiary>().ToTable("ShopDiary");
 
             modelBuilder.Entity<DSItem>()
             .HasIndex(x => new { x.MemberID, x.Name })
