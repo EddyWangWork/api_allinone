@@ -5,6 +5,7 @@ using demoAPI.Model.TodlistsDone;
 using demoAPI.Model.Trip;
 using demoAPI.Model.Kanbans;
 using demoAPI.Model.DS.Shops;
+using demoAPI.Model.DS.Accounts;
 
 namespace demoAPI.Common.Mapper
 {
@@ -12,6 +13,8 @@ namespace demoAPI.Common.Mapper
     {
         public MappingProfile()
         {
+            CreateMap<DSAccountAddReq, DSAccount>();
+
             CreateMap<ShopDiaryAddReq, ShopDiary>();
             
             CreateMap<ShopAddReq, Shop>();

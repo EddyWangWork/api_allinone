@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using demoAPI.BLL.Common;
 using demoAPI.BLL.Shop;
+using demoAPI.Middleware;
 using demoAPI.Model;
 using demoAPI.Model.DS.Shops;
 using Microsoft.AspNetCore.Authorization;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace demoAPI.Controllers
 {
     [ApiController]
+    [ResponseCompressionAttribute]
     [Route("[controller]")]
     public class ShopController : ControllerBase
     {
